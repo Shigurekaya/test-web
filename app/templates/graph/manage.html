@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}图谱维护{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">图谱维护</h1>
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card panel mb-3">
+      <div class="card-header bg-white">新增节点</div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="action" value="add_node">
+          <div class="mb-2"><input class="form-control" name="name" placeholder="节点名称" required></div>
+          <div class="mb-2">
+            <select class="form-select" name="node_type">
+              {% for t in ['concept','department','project','keyword','document'] %}
+              <option value="{{ t }}">{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2"><input class="form-control" name="description" placeholder="说明"></div>
+          <button class="btn btn-primary" type="submit">添加节点</button>
+        </form>
+      </div>
+    </div>
+    <div class="card panel">
+      <div class="card-header bg-white">新增关系</div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="action" value="add_edge">
+          <div class="mb-2"><input class="form-control" name="source_name" placeholder="源节点名" required></div>
+          <div class="mb-2"><input class="form-control" name="target_name" placeholder="目标节点名" required></div>
+          <div class="mb-2"><input class="form-control" name="relation" placeholder="关系，如 关联/属于" value="关联"></div>
+          <button class="btn btn-primary" type="submit">添加关系</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card panel mb-3">
+      <div class="card-header bg-white">最近节点</div>
+      <ul class="list-group list-group-flush">
+        {% for n in nodes %}
+        <li class="list-group-item small"><span class="badge text-bg-light">{{ n.node_type }}</span> {{ n.name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="card panel">
+      <div class="card-header bg-white">最近关系</div>
+      <ul class="list-group list-group-flush">
+        {% for e in edges %}
+        <li class="list-group-item small">{{ e.source.name }} —{{ e.relation }}→ {{ e.target.name }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

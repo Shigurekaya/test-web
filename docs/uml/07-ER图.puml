@@ -1,0 +1,94 @@
+@startuml 07-ER图
+entity users {
+  * id : INTEGER <<PK>>
+  --
+  * username
+  * password_hash
+  * display_name
+  * role
+  * department
+}
+
+entity categories {
+  * id : INTEGER <<PK>>
+  --
+  * name
+  description
+}
+
+entity documents {
+  * id : INTEGER <<PK>>
+  --
+  * title
+  * content
+  summary
+  * department
+  * visibility
+  * status
+  version
+  tags
+  category_id <<FK>>
+  author_id <<FK>>
+}
+
+entity knowledge_chunks {
+  * id : INTEGER <<PK>>
+  --
+  * document_id <<FK>>
+  * chunk_index
+  * content
+  keywords
+}
+
+entity graph_nodes {
+  * id : INTEGER <<PK>>
+  --
+  * name
+  * node_type
+  description
+  document_id <<FK>>
+}
+
+entity graph_edges {
+  * id : INTEGER <<PK>>
+  --
+  * source_id <<FK>>
+  * target_id <<FK>>
+  * relation
+}
+
+entity favorites {
+  * id : INTEGER <<PK>>
+  --
+  * user_id <<FK>>
+  * document_id <<FK>>
+}
+
+entity audit_logs {
+  * id : INTEGER <<PK>>
+  --
+  user_id <<FK>>
+  * action
+  detail
+}
+
+entity qa_history {
+  * id : INTEGER <<PK>>
+  --
+  user_id <<FK>>
+  * question
+  * answer
+  sources
+  mode
+}
+
+users ||--o{ documents
+categories ||--o{ documents
+documents ||--o{ knowledge_chunks
+documents ||--o{ favorites
+users ||--o{ favorites
+users ||--o{ audit_logs
+users ||--o{ qa_history
+graph_nodes ||--o{ graph_edges
+graph_nodes ||--o{ graph_edges
+@enduml

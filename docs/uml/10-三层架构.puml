@@ -1,0 +1,23 @@
+@startuml 10-三层架构
+rectangle "用户界面层 UI" {
+  card "登录/工作台/文档/问答/图谱页面"
+}
+
+rectangle "业务处理层 Business" {
+  card "权限判定"
+  card "文档管理"
+  card "RAG检索与生成"
+  card "图谱同步"
+  card "审计收藏"
+}
+
+rectangle "基础服务层 Infrastructure" {
+  card "ORM / SQLite"
+  card "会话与密码哈希"
+  card "可选 LLM API"
+  card "启停与日志"
+}
+
+"用户界面层 UI" --> "业务处理层 Business"
+"业务处理层 Business" --> "基础服务层 Infrastructure"
+@enduml

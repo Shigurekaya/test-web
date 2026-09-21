@@ -1,0 +1,20 @@
+@startuml 08-部署图
+node "客户机浏览器" {
+  artifact "Chrome/Edge" as Browser
+}
+
+node "应用主机 (Windows)" {
+  artifact "start.ps1" as Script
+  artifact "Flask App\n(Gunicorn可选)" as App
+  database "SQLite\ninstance/knowledge.db" as DB
+  folder "uploads/" as UP
+}
+
+cloud "可选大模型服务\nOpenAI兼容API" as LLM
+
+Browser --> App : HTTP :5000
+Script --> App : 拉起进程
+App --> DB : SQLAlchemy
+App --> UP : 附件预留
+App --> LLM : 可选 Chat Completions
+@enduml

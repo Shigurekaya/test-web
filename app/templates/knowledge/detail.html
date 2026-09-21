@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-2">
+  <ol class="breadcrumb mb-0 small">
+    <li class="breadcrumb-item"><a href="{{ url_for('knowledge.list_docs') }}">知识文档</a></li>
+    <li class="breadcrumb-item active">{{ doc.title }}</li>
+  </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 page-title mb-2">{{ doc.title }}</h1>
+    <div>
+      <span class="badge text-bg-{{ doc.visibility_badge }} me-1">{{ doc.visibility_label }}</span>
+      <span class="badge text-bg-{{ doc.status_badge }} me-1">{{ doc.status_label }}</span>
+      <span class="badge text-bg-light text-dark">v{{ doc.version }}</span>
+    </div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-success" href="{{ url_for('qa.ask_page', q=doc.title ~ ' 的要点是什么') }}">基于本文提问</a>
+    <form method="post" action="{{ url_for('knowledge.toggle_favorite', doc_id=doc.id) }}">
+      <button class="btn btn-outline-warning" type="submit">{{ '取消收藏' if is_fav else '收藏' }}</button>
+    </form>
+    {% if current_user.is_admin or doc.author_id == current_user.id %}
+    <a class="btn btn-outline-primary" href="{{ url_for('knowledge.edit', doc_id=doc.id) }}">编辑</a>
+    <form method="post" action="{{ url_for('knowledge.delete', doc_id=doc.id) }}" onsubmit="return confirm('确认删除？')">
+      <button class="btn btn-outline-danger" type="submit">删除</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    {% if doc.summary %}
+    <div class="alert alert-light border mb-3">
+      <div class="small text-muted mb-1">摘要</div>
+      {{ doc.summary }}
+    </div>
+    {% endif %}
+    <div class="card panel">
+      <div class="card-body content-body">{{ doc.content }}</div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="meta-box mb-3">
+      <div class="fw-semibold mb-2">文档信息</div>
+      <div class="row-item"><span class="k">分类</span><span class="v">{{ doc.category.name if doc.category else '未分类' }}</span></div>
+      <div class="row-item"><span class="k">部门</span><span class="v">{{ doc.department }}</span></div>
+      <div class="row-item"><span class="k">作者</span><span class="v">{{ doc.author.display_name if doc.author else '—' }}</span></div>
+      <div class="row-item"><span class="k">字数</span><span class="v">{{ doc.char_count }}</span></div>
+      <div class="row-item"><span class="k">知识片段</span><span class="v">{{ chunk_count }}</span></div>
+      <div class="row-item"><span class="k">创建</span><span class="v">{{ doc.created_at|dt }}</span></div>
+      <div class="row-item"><span class="k">更新</span><span class="v">{{ doc.updated_at|dt }}</span></div>
+    </div>
+    {% if doc.tag_list %}
+    <div class="card panel mb-3">
+      <div class="card-body">
+        <div class="fw-semibold mb-2">标签</div>
+        {% for t in doc.tag_list %}
+        <span class="tag-chip">{{ t }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% if related %}
+    <div class="card panel">
+      <div class="card-header bg-white fw-semibold">相关文档</div>
+      <ul class="list-group list-group-flush">
+        {% for r in related %}
+        <li class="list-group-item">
+          <a href="{{ url_for('knowledge.detail', doc_id=r.id) }}">{{ r.title }}</a>
+          <div class="small text-muted">{{ r.department }} · {{ r.updated_at|dt }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

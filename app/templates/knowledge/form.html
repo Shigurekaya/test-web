@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ '编辑文档' if doc else '新建文档' }}{% endblock %}
+{% block content %}
+<h1 class="h3 page-title mb-3">{{ '编辑文档' if doc else '新建文档' }}</h1>
+<div class="card panel">
+  <div class="card-body">
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">标题 <span class="text-danger">*</span></label>
+        <input class="form-control" name="title" required value="{{ doc.title if doc else '' }}">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">摘要</label>
+        <input class="form-control" name="summary" value="{{ doc.summary if doc else '' }}" placeholder="一句话说明文档用途，便于列表预览">
+      </div>
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label class="form-label">部门</label>
+          <select class="form-select" name="department">
+            {% for d in departments %}
+            <option value="{{ d }}" {% if (doc and doc.department==d) or (not doc and current_user.department==d) %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">分类</label>
+          <select class="form-select" name="category_id">
+            <option value="">未分类</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {% if doc and doc.category_id==c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">可见性</label>
+          <select class="form-select" name="visibility">
+            {% for key, label in visibility_labels.items() %}
+            <option value="{{ key }}" {% if doc and doc.visibility==key %}selected{% endif %}{% if not doc and key=='internal' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">状态</label>
+          <select class="form-select" name="status">
+            {% for key, label in status_labels.items() %}
+            <option value="{{ key }}" {% if doc and doc.status==key %}selected{% endif %}{% if not doc and key=='published' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">版本</label>
+          <input class="form-control" name="version" value="{{ doc.version if doc else '1.0' }}">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">标签（逗号分隔）</label>
+        <input class="form-control" name="tags" value="{{ doc.tags if doc else '' }}" placeholder="年假,人事">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">正文 <span class="text-danger">*</span></label>
+        <textarea class="form-control" name="content" rows="14" required placeholder="支持分段书写，保存后会自动切分为知识片段">{{ doc.content if doc else '' }}</textarea>
+      </div>
+      <button class="btn btn-primary" type="submit">保存并重建索引</button>
+      <a class="btn btn-link" href="{{ url_for('knowledge.list_docs') }}">返回</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

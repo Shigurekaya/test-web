@@ -1,0 +1,26 @@
+@startuml 02-登录时序图
+actor 用户
+participant "浏览器" as UI
+participant "AuthController" as Auth
+participant "UserModel" as User
+participant "AuditLog" as Audit
+database "SQLite" as DB
+
+用户 -> UI : 输入用户名密码
+UI -> Auth : POST /auth/login
+activate Auth
+Auth -> User : 查询用户
+User -> DB : SELECT users
+DB --> User : row
+User --> Auth : User/None
+alt 密码正确
+  Auth -> Audit : 写 login 日志
+  Audit -> DB : INSERT audit_logs
+  Auth --> UI : 302 /dashboard + Session
+  UI --> 用户 : 进入工作台
+else 密码错误
+  Auth --> UI : 登录页 + 错误提示
+  UI --> 用户 : 看到失败信息
+end
+deactivate Auth
+@enduml

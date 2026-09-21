@@ -1,0 +1,21 @@
+@startuml 04-文档发布活动图
+|员工|
+start
+:填写标题/正文/可见性;
+:提交保存;
+
+|系统|
+:校验必填项;
+if (校验通过?) then (是)
+  :写入 documents;
+  :切分生成 knowledge_chunks;
+  :同步 graph 节点与边;
+  :写审计日志;
+  :返回文档详情;
+else (否)
+  :提示错误;
+endif
+|员工|
+:确认结果;
+stop
+@enduml

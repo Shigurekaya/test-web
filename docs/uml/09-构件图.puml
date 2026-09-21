@@ -1,0 +1,41 @@
+@startuml 09-构件图
+package "表现层" {
+  [templates/*.html]
+  [static/css/js]
+}
+
+package "控制层 Blueprints" {
+  [auth]
+  [main]
+  [knowledge]
+  [qa]
+  [graph]
+  [admin]
+}
+
+package "业务服务" {
+  [services.rag]
+  [services.graph]
+}
+
+package "数据访问" {
+  [models]
+  [SQLAlchemy]
+}
+
+database "SQLite" as DB
+
+[templates/*.html] --> [auth]
+[templates/*.html] --> [knowledge]
+[templates/*.html] --> [qa]
+[templates/*.html] --> [graph]
+[qa] --> [services.rag]
+[knowledge] --> [services.rag]
+[knowledge] --> [services.graph]
+[graph] --> [services.graph]
+[services.rag] --> [models]
+[services.graph] --> [models]
+[auth] --> [models]
+[models] --> [SQLAlchemy]
+[SQLAlchemy] --> DB
+@enduml

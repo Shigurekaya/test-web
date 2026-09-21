@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}无权访问{% endblock %}
+{% block content %}
+<div class="card panel mx-auto" style="max-width:560px">
+  <div class="card-body p-4 text-center">
+    <div class="display-6 text-danger mb-2">403</div>
+    <h1 class="h4">无权访问</h1>
+    <p class="text-muted">当前账号没有权限查看该资源（可能是机密文档或管理功能）。</p>
+    <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">返回工作台</a>
+  </div>
+</div>
+{% endblock %}

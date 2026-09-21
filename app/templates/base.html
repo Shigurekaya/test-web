@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark app-nav">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}">
+      <span class="brand-mark">KB</span> 知识财富库
+    </a>
+    {% if current_user.is_authenticated %}
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMain">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link {% if current_endpoint=='main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}">工作台</a></li>
+        <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('knowledge.') and current_endpoint!='knowledge.favorites' and current_endpoint!='knowledge.categories' %}active{% endif %}" href="{{ url_for('knowledge.list_docs') }}">知识文档</a></li>
+        <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('qa.') %}active{% endif %}" href="{{ url_for('qa.ask_page') }}">智能问答</a></li>
+        <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('graph.') %}active{% endif %}" href="{{ url_for('graph.view') }}">知识图谱</a></li>
+        <li class="nav-item"><a class="nav-link {% if current_endpoint=='knowledge.favorites' %}active{% endif %}" href="{{ url_for('knowledge.favorites') }}">我的收藏</a></li>
+        <li class="nav-item"><a class="nav-link {% if current_endpoint=='main.about' %}active{% endif %}" href="{{ url_for('main.about') }}">关于</a></li>
+        {% if current_user.is_admin %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {% if current_endpoint in ['knowledge.categories','graph.manage','admin.users','admin.audits'] %}active{% endif %}" href="#" data-bs-toggle="dropdown">管理</a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{{ url_for('knowledge.categories') }}">分类管理</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('graph.manage') }}">图谱维护</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.users') }}">用户列表</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('admin.audits') }}">审计日志</a></li>
+          </ul>
+        </li>
+        {% endif %}
+      </ul>
+      <span class="navbar-text text-white-50 me-3 small">
+        {{ current_user.display_name }} · {{ current_user.department }}
+        <span class="badge text-bg-light text-dark ms-1">{{ current_user.role|role_label }}</span>
+      </span>
+      <a class="btn btn-sm btn-outline-light" href="{{ url_for('auth.logout') }}">退出</a>
+    </div>
+    {% endif %}
+  </div>
+</nav>
+
+<main class="container py-4 flex-grow-1">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="app-footer">
+  <div class="container d-flex flex-wrap justify-content-between gap-2 small text-muted">
+    <span>{{ COURSE_NAME }} · {{ APP_NAME }} v{{ APP_VERSION }}</span>
+    <span>Flask MVC · 轻量 RAG · 知识图谱</span>
+  </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

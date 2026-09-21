@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}我的收藏{% endblock %}
+{% block content %}
+<h1 class="h3 page-title mb-3">我的收藏</h1>
+{% if items %}
+<div class="row g-3">
+  {% for item in items %}
+  <div class="col-md-6">
+    <div class="card doc-card">
+      <div class="card-body">
+        <a class="doc-title" href="{{ url_for('knowledge.detail', doc_id=item.document.id) }}">{{ item.document.title }}</a>
+        <div class="doc-summary my-2">{{ item.document.summary or '暂无摘要' }}</div>
+        <div class="small text-muted">收藏于 {{ item.created_at|dt }} · {{ item.document.department }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card panel">
+  <div class="empty-state">
+    <div class="fw-semibold mb-1">还没有收藏</div>
+    <div class="small mb-3">在文档详情页点击「收藏」，方便下次快速打开</div>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('knowledge.list_docs') }}">去浏览文档</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

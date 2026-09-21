@@ -1,0 +1,33 @@
+@startuml 03-RAG问答时序图
+actor 员工
+participant "问答页" as UI
+participant "QAController" as QA
+participant "RAGService" as RAG
+participant "权限过滤" as ACL
+database "SQLite" as DB
+
+员工 -> UI : 提交问题
+UI -> QA : POST /qa/
+activate QA
+QA -> RAG : ask(question, user)
+activate RAG
+RAG -> ACL : searchable_documents(user)
+ACL -> DB : 查询 documents
+DB --> ACL : docs
+ACL --> RAG : 可访问 doc_ids
+RAG -> DB : 加载 knowledge_chunks
+DB --> RAG : chunks
+RAG -> RAG : 分词打分 Top-K
+alt 已配置 API Key
+  RAG -> RAG : call_llm_answer(hits)
+else 本地模式
+  RAG -> RAG : build_local_answer(hits)
+end
+RAG -> DB : 保存 qa_history
+RAG --> QA : answer + hits
+deactivate RAG
+QA -> DB : 写 audit ask_qa
+QA --> UI : 渲染答案与来源卡
+UI --> 员工 : 查看回答
+deactivate QA
+@enduml

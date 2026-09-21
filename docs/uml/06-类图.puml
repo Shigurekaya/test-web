@@ -1,0 +1,78 @@
+@startuml 06-类图
+class User {
+  +id: int
+  +username: str
+  +password_hash: str
+  +display_name: str
+  +role: str
+  +department: str
+  +set_password()
+  +check_password()
+  +is_admin(): bool
+}
+
+class Category {
+  +id: int
+  +name: str
+  +description: str
+}
+
+class Document {
+  +id: int
+  +title: str
+  +content: str
+  +summary: str
+  +department: str
+  +visibility: str
+  +status: str
+  +version: str
+  +tags: str
+}
+
+class KnowledgeChunk {
+  +id: int
+  +chunk_index: int
+  +content: str
+  +keywords: str
+}
+
+class GraphNode {
+  +id: int
+  +name: str
+  +node_type: str
+  +description: str
+}
+
+class GraphEdge {
+  +id: int
+  +relation: str
+}
+
+class Favorite {
+  +id: int
+}
+
+class AuditLog {
+  +id: int
+  +action: str
+  +detail: str
+}
+
+class QAHistory {
+  +id: int
+  +question: str
+  +answer: str
+  +sources: str
+  +mode: str
+}
+
+User "1" -- "*" Document : authors
+Category "1" -- "*" Document
+Document "1" -- "*" KnowledgeChunk
+Document "1" -- "*" Favorite
+User "1" -- "*" Favorite
+User "1" -- "*" AuditLog
+User "1" -- "*" QAHistory
+GraphNode "1" -- "*" GraphEdge : out
+GraphNode "1" -- "*" GraphEdge : in
+@enduml

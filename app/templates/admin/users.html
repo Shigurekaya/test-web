@@ -1,24 +1,110 @@
 {% extends "base.html" %}
 {% block title %}用户列表{% endblock %}
 {% block content %}
-<h1 class="h3 page-title mb-3">用户列表</h1>
+<div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 page-title mb-1">用户列表</h1>
+    <div class="text-muted small">共 {{ users|length }} 个账号 · 管理员 {{ admin_count }} · 员工 {{ employee_count }}</div>
+  </div>
+</div>
+
+<div class="card panel mb-3">
+  <div class="card-body filter-bar py-3">
+    <form class="row g-2 align-items-end" method="get" onsubmit="return false;">
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">关键词</label>
+        <input class="form-control form-control-sm" id="userFilterQ" placeholder="用户名 / 姓名">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">部门</label>
+        <select class="form-select form-select-sm" id="userFilterDept">
+          <option value="">全部部门</option>
+          {% for d in departments %}
+          <option value="{{ d }}">{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small text-muted mb-1">角色</label>
+        <select class="form-select form-select-sm" id="userFilterRole">
+          <option value="">全部角色</option>
+          <option value="管理员">管理员</option>
+          <option value="员工">员工</option>
+        </select>
+      </div>
+      <div class="col-md-4 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary" type="button" id="userFilterBtn">筛选</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" id="userFilterReset">重置</button>
+        <span class="small text-muted align-self-center" id="userFilterHint">展示站本地筛选</span>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="card panel">
   <div class="table-responsive">
-    <table class="table mb-0 align-middle">
-      <thead><tr><th>ID</th><th>用户名</th><th>姓名</th><th>角色</th><th>部门</th><th>创建时间</th></tr></thead>
+    <table class="table mb-0 align-middle" id="userTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>用户名</th>
+          <th>姓名</th>
+          <th>角色</th>
+          <th>部门</th>
+          <th>文档数</th>
+          <th>创建时间</th>
+        </tr>
+      </thead>
       <tbody>
         {% for u in users %}
-        <tr>
+        <tr data-role="{{ u.role|role_label }}" data-dept="{{ u.department }}" data-q="{{ u.username }} {{ u.display_name }}">
           <td>{{ u.id }}</td>
-          <td>{{ u.username }}</td>
+          <td><code>{{ u.username }}</code></td>
           <td>{{ u.display_name }}</td>
-          <td><span class="badge text-bg-light text-dark">{{ u.role|role_label }}</span></td>
+          <td>
+            {% if u.role == 'admin' %}
+            <span class="badge text-bg-primary">{{ u.role|role_label }}</span>
+            {% else %}
+            <span class="badge text-bg-light text-dark">{{ u.role|role_label }}</span>
+            {% endif %}
+          </td>
           <td>{{ u.department }}</td>
+          <td class="text-end">{{ doc_counts.get(u.id, 0) }}</td>
           <td class="small text-muted">{{ u.created_at|dt }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+  <div class="card-footer bg-white small text-muted">第 1–{{ users|length }} 条，共 {{ users|length }} 条</div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  function apply() {
+    var q = (document.getElementById('userFilterQ').value || '').trim().toLowerCase();
+    var dept = document.getElementById('userFilterDept').value;
+    var role = document.getElementById('userFilterRole').value;
+    var rows = document.querySelectorAll('#userTable tbody tr');
+    var shown = 0;
+    rows.forEach(function (tr) {
+      var ok = true;
+      if (q && (tr.getAttribute('data-q') || '').toLowerCase().indexOf(q) < 0) ok = false;
+      if (dept && tr.getAttribute('data-dept') !== dept) ok = false;
+      if (role && tr.getAttribute('data-role') !== role) ok = false;
+      tr.style.display = ok ? '' : 'none';
+      if (ok) shown += 1;
+    });
+    document.getElementById('userFilterHint').textContent = '显示 ' + shown + ' / {{ users|length }}';
+  }
+  document.getElementById('userFilterBtn').addEventListener('click', apply);
+  document.getElementById('userFilterReset').addEventListener('click', function () {
+    document.getElementById('userFilterQ').value = '';
+    document.getElementById('userFilterDept').value = '';
+    document.getElementById('userFilterRole').value = '';
+    apply();
+  });
+})();
+</script>
 {% endblock %}

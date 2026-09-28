@@ -1,14 +1,55 @@
 {% extends "base.html" %}
 {% block title %}审计日志{% endblock %}
 {% block content %}
-<h1 class="h3 page-title mb-3">审计日志</h1>
+<div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 page-title mb-1">审计日志</h1>
+    <div class="text-muted small">最近 {{ logs|length }} 条（库内合计 {{ total }}）· 登录 {{ action_stats.get('login', 0) }} · 查看 {{ action_stats.get('view_document', 0) }} · 问答 {{ action_stats.get('ask_qa', 0) }}</div>
+  </div>
+</div>
+
+<div class="card panel mb-3">
+  <div class="card-body filter-bar py-3">
+    <form class="row g-2 align-items-end" onsubmit="return false;">
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">用户</label>
+        <input class="form-control form-control-sm" id="auditUser" placeholder="用户名">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small text-muted mb-1">动作</label>
+        <select class="form-select form-select-sm" id="auditAction">
+          <option value="">全部动作</option>
+          {% for key, label in action_labels.items() %}
+          <option value="{{ label }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small text-muted mb-1">详情关键词</label>
+        <input class="form-control form-control-sm" id="auditDetail" placeholder="文档名 / 提问摘要">
+      </div>
+      <div class="col-md-2 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary" type="button" id="auditFilterBtn">筛选</button>
+        <button class="btn btn-sm btn-outline-secondary" type="button" id="auditFilterReset">重置</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="card panel">
   <div class="table-responsive">
-    <table class="table table-sm mb-0 align-middle">
-      <thead><tr><th style="width:160px">时间</th><th>用户</th><th>动作</th><th>详情</th></tr></thead>
+    <table class="table table-sm mb-0 align-middle" id="auditTable">
+      <thead>
+        <tr>
+          <th style="width:160px">时间</th>
+          <th style="width:110px">用户</th>
+          <th style="width:110px">动作</th>
+          <th>详情</th>
+        </tr>
+      </thead>
       <tbody>
         {% for log in logs %}
-        <tr>
+        <tr data-user="{{ log.user.username if log.user else '' }}" data-action="{{ log.action|action_label }}" data-detail="{{ log.detail }}">
           <td class="small text-muted">{{ log.created_at|dt }}</td>
           <td>{{ log.user.username if log.user else '—' }}</td>
           <td><span class="badge text-bg-secondary">{{ log.action|action_label }}</span></td>
@@ -20,5 +61,36 @@
       </tbody>
     </table>
   </div>
+  <div class="card-footer bg-white small text-muted" id="auditFoot">展示最近 {{ logs|length }} 条</div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  function apply() {
+    var u = (document.getElementById('auditUser').value || '').trim().toLowerCase();
+    var a = document.getElementById('auditAction').value;
+    var d = (document.getElementById('auditDetail').value || '').trim().toLowerCase();
+    var rows = document.querySelectorAll('#auditTable tbody tr');
+    var shown = 0;
+    rows.forEach(function (tr) {
+      if (!tr.getAttribute('data-action')) return;
+      var ok = true;
+      if (u && (tr.getAttribute('data-user') || '').toLowerCase().indexOf(u) < 0) ok = false;
+      if (a && tr.getAttribute('data-action') !== a) ok = false;
+      if (d && (tr.getAttribute('data-detail') || '').toLowerCase().indexOf(d) < 0) ok = false;
+      tr.style.display = ok ? '' : 'none';
+      if (ok) shown += 1;
+    });
+    document.getElementById('auditFoot').textContent = '筛选后显示 ' + shown + ' 条（原始加载 {{ logs|length }}）';
+  }
+  document.getElementById('auditFilterBtn').addEventListener('click', apply);
+  document.getElementById('auditFilterReset').addEventListener('click', function () {
+    document.getElementById('auditUser').value = '';
+    document.getElementById('auditAction').value = '';
+    document.getElementById('auditDetail').value = '';
+    apply();
+  });
+})();
+</script>
 {% endblock %}

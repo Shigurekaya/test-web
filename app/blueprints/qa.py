@@ -16,6 +16,12 @@ SUGGESTED_QUESTIONS = [
     "如何重置产品A密码？",
     "采购超过两万元要找谁审批？",
     "知识库怎么用？",
+    "线索 A 级要多久首触？",
+    "API 密钥多久轮换一次？",
+    "合同用印怎么走？",
+    "续费预警什么时候发？",
+    "发布窗口是哪段时间？",
+    "培训学分怎么算？",
 ]
 
 
@@ -43,7 +49,7 @@ def ask_page():
     history = (
         QAHistory.query.filter_by(user_id=current_user.id)
         .order_by(QAHistory.created_at.desc())
-        .limit(10)
+        .limit(20)
         .all()
     )
     return render_template(

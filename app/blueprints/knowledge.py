@@ -9,7 +9,17 @@ from app.utils import STATUS_LABELS, VISIBILITY_LABELS, admin_required
 
 bp = Blueprint("knowledge", __name__, url_prefix="/knowledge")
 
-DEPARTMENTS = ["综合部", "人事部", "财务部", "信息部", "产品部"]
+DEPARTMENTS = [
+    "综合部",
+    "人事部",
+    "财务部",
+    "信息部",
+    "产品部",
+    "运营部",
+    "市场部",
+    "法务部",
+    "技术部",
+]
 
 
 @bp.route("/")
@@ -20,7 +30,7 @@ def list_docs():
     department = request.args.get("department", "").strip()
     visibility = request.args.get("visibility", "").strip()
     page = max(request.args.get("page", 1, type=int) or 1, 1)
-    per_page = 8
+    per_page = 12
 
     docs = searchable_documents(current_user)
     if category_id:
@@ -258,4 +268,18 @@ def categories():
             flash("分类名为空或已存在", "warning")
         return redirect(url_for("knowledge.categories"))
     cats = Category.query.order_by(Category.id).all()
-    return render_template("knowledge/categories.html", categories=cats)
+    from collections import Counter
+
+    doc_counts = Counter(
+        row[0]
+        for row in Document.query.with_entities(Document.category_id)
+        .filter(Document.category_id.isnot(None))
+        .all()
+    )
+    total_docs = Document.query.count()
+    return render_template(
+        "knowledge/categories.html",
+        categories=cats,
+        doc_counts=doc_counts,
+        total_docs=total_docs,
+    )

@@ -17,7 +17,7 @@ def index():
 
     if cu.is_authenticated:
         return redirect(url_for("main.dashboard"))
-    return redirect(url_for("auth.login"))
+    return render_template("main/index.html")
 
 
 @bp.route("/dashboard")

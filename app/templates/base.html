@@ -12,7 +12,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark app-nav">
   <div class="container">
     <a class="navbar-brand fw-semibold" href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}">
-      <span class="brand-mark">KB</span> 知识财富库
+      <span class="brand-mark">KB</span> 企业知识库
     </a>
     {% if current_user.is_authenticated %}
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
@@ -22,8 +22,8 @@
       <ul class="navbar-nav me-auto">
         <li class="nav-item"><a class="nav-link {% if current_endpoint=='main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}">工作台</a></li>
         <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('knowledge.') and current_endpoint!='knowledge.favorites' and current_endpoint!='knowledge.categories' %}active{% endif %}" href="{{ url_for('knowledge.list_docs') }}">知识文档</a></li>
-        <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('qa.') %}active{% endif %}" href="{{ url_for('qa.ask_page') }}">智能问答</a></li>
-        <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('graph.') %}active{% endif %}" href="{{ url_for('graph.view') }}">知识图谱</a></li>
+        <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('qa.') %}active{% endif %}" href="{{ url_for('qa.ask_page') }}">站内问答</a></li>
+        <li class="nav-item"><a class="nav-link {% if current_endpoint and current_endpoint.startswith('graph.') %}active{% endif %}" href="{{ url_for('graph.view') }}">关系图</a></li>
         <li class="nav-item"><a class="nav-link {% if current_endpoint=='knowledge.favorites' %}active{% endif %}" href="{{ url_for('knowledge.favorites') }}">我的收藏</a></li>
         <li class="nav-item"><a class="nav-link {% if current_endpoint=='main.about' %}active{% endif %}" href="{{ url_for('main.about') }}">关于</a></li>
         {% if current_user.is_admin %}
@@ -65,7 +65,7 @@
 <footer class="app-footer">
   <div class="container d-flex flex-wrap justify-content-between gap-2 small text-muted">
     <span>{{ COURSE_NAME }} · {{ APP_NAME }} v{{ APP_VERSION }}</span>
-    <span>Flask MVC · 轻量 RAG · 知识图谱</span>
+    <span>Flask + SQLite · 课程大作业</span>
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

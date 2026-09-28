@@ -5,18 +5,18 @@
   <div class="login-shell">
     <section class="login-hero">
       <div class="pill">{{ COURSE_NAME }} · 课程大作业</div>
-      <h1 class="mb-2">智慧企业知识财富库</h1>
-      <p class="mb-4 opacity-75">制度与经验可沉淀、可检索、可问答、可关联可视化的企业知识平台。</p>
+      <h1 class="mb-2">{{ APP_NAME }}</h1>
+      <p class="mb-4 opacity-75">用 Flask + SQLite 做的企业知识库作业：管文档、控权限、简单问答和关系图。</p>
       <ul class="list-unstyled mb-0 small">
-        <li class="mb-2">✓ 知识文档分级管理（公开 / 内部 / 机密）</li>
-        <li class="mb-2">✓ 轻量 RAG：检索增强问答并标注来源</li>
-        <li class="mb-2">✓ 知识图谱：文档—部门—关键词关系</li>
-        <li>✓ 收藏、审计与权限隔离</li>
+        <li class="mb-2">✓ 文档分级管理（公开 / 内部 / 机密）</li>
+        <li class="mb-2">✓ 关键词检索问答，并附来源摘要</li>
+        <li class="mb-2">✓ 文档—部门—分类关系图</li>
+        <li>✓ 收藏与操作日志</li>
       </ul>
     </section>
     <section class="login-form-pane">
       <h2 class="h5 mb-1">账号登录</h2>
-      <p class="text-muted small mb-4">演示环境已预置多角色账号，登录即可完整体验。</p>
+      <p class="text-muted small mb-4">下面已填好管理员账号，直接点登录即可。</p>
       <form method="post">
         <div class="mb-3">
           <label class="form-label">用户名</label>
@@ -34,7 +34,7 @@
         <div>管理员 admin / admin123</div>
         <div>人事 hr / hr123</div>
         <div>财务 finance / fin123</div>
-        <div>信息部 it / it123（可访问机密）</div>
+        <div>信息部 it / it123（可看机密）</div>
         <div>产品部 product / prod123</div>
       </div>
     </section>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}首页 - {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="login-page">
+  <div class="login-shell">
+    <section class="login-hero">
+      <div class="pill">{{ COURSE_NAME }} · 课程大作业</div>
+      <h1 class="mb-2">{{ APP_NAME }}</h1>
+      <p class="mb-4 opacity-75">基于 Flask + SQLite 的课程作业：文档管理、权限、站内问答和关系图。</p>
+      <ul class="list-unstyled mb-0 small">
+        <li class="mb-2">✓ 知识文档增删改查与分类搜索</li>
+        <li class="mb-2">✓ 公开 / 内部 / 机密三级权限</li>
+        <li class="mb-2">✓ 关键词检索问答（附来源摘要）</li>
+        <li>✓ 文档—部门—分类关系图</li>
+      </ul>
+    </section>
+    <section class="login-form-pane">
+      <h2 class="h5 mb-1">开始使用</h2>
+      <p class="text-muted small mb-4">未登录时从本页进入登录；登录后会进入工作台。</p>
+      <a class="btn btn-primary w-100 mb-3" href="{{ url_for('auth.login') }}">去登录</a>
+      <div class="small text-muted">
+        <div class="fw-semibold text-dark mb-1">演示账号</div>
+        <div>管理员 admin / admin123</div>
+        <div>人事 hr / hr123</div>
+        <div>财务 finance / fin123</div>
+        <div>信息部 it / it123</div>
+        <div>产品部 product / prod123</div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

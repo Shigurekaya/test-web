@@ -8,7 +8,7 @@
       当前模式：{% if llm_enabled %}<span class="text-success">大模型生成（已配置 API）</span>{% else %}<span>本地检索摘要（无需 API Key）</span>{% endif %}
     </div>
   </div>
-  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('graph.view') }}">查看知识图谱</a>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('graph.view') }}">查看关系图</a>
 </div>
 
 <div class="card panel mb-3">

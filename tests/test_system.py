@@ -132,6 +132,56 @@ class KnowledgeSystemTests(unittest.TestCase):
         self.assertIn("内部", text)
         self.assertNotRegex(text, r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}")
 
+    def test_13_unauthorized_dashboard_redirects_to_login(self):
+        self.client.get("/auth/logout", follow_redirects=True)
+        res = self.client.get("/dashboard")
+        self.assertEqual(res.status_code, 302)
+        loc = res.headers.get("Location", "")
+        self.assertIn("/auth/login", loc)
+        self.assertIn("next=", loc)
+
+    def test_14_trailing_slash_ok(self):
+        self.login("admin", "admin123")
+        for path in ("/dashboard", "/dashboard/", "/knowledge", "/knowledge/", "/qa", "/qa/"):
+            res = self.client.get(path)
+            self.assertEqual(res.status_code, 200, msg=path)
+
+    def test_15_unknown_path_is_404_not_login(self):
+        self.client.get("/auth/logout", follow_redirects=True)
+        res = self.client.get("/this-page-does-not-exist-xyz")
+        self.assertEqual(res.status_code, 404)
+        text = res.get_data(as_text=True)
+        self.assertIn("页面不存在", text)
+        self.assertNotIn("账号登录", text)
+
+    def test_16_open_redirect_blocked(self):
+        self.client.get("/auth/logout", follow_redirects=True)
+        res = self.client.post(
+            "/auth/login?next=https://evil.com",
+            data={"username": "admin", "password": "admin123", "next": "https://evil.com"},
+            follow_redirects=False,
+        )
+        self.assertEqual(res.status_code, 302)
+        loc = res.headers.get("Location", "")
+        self.assertNotIn("evil.com", loc)
+        self.assertTrue(loc.endswith("/dashboard") or "/dashboard" in loc)
+
+    def test_17_safe_next_allows_internal_path(self):
+        self.client.get("/auth/logout", follow_redirects=True)
+        res = self.client.post(
+            "/auth/login",
+            data={"username": "admin", "password": "admin123", "next": "/knowledge/"},
+            follow_redirects=False,
+        )
+        self.assertEqual(res.status_code, 302)
+        self.assertIn("/knowledge", res.headers.get("Location", ""))
+
+    def test_18_non_admin_gets_403_on_admin(self):
+        self.client.get("/auth/logout", follow_redirects=True)
+        self.login("hr", "hr123")
+        res = self.client.get("/admin/users")
+        self.assertEqual(res.status_code, 403)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

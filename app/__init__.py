@@ -25,6 +25,8 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     app.config["APP_NAME"] = meta.APP_NAME
     app.config["APP_VERSION"] = meta.APP_VERSION
+    # 须在注册蓝图前设置，否则已创建的 Rule 仍按默认严格斜杠匹配
+    app.url_map.strict_slashes = False
 
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)

@@ -1,8 +1,26 @@
 from datetime import datetime, timezone
 from functools import wraps
+from urllib.parse import urlparse
 
-from flask import flash, redirect, url_for
+from flask import abort, flash, redirect, url_for
 from flask_login import current_user
+
+
+def safe_next_url(value: str | None) -> str | None:
+    """仅允许站内相对路径，防止登录后 open redirect。"""
+    if not value:
+        return None
+    value = value.strip()
+    if not value.startswith("/") or value.startswith("//"):
+        return None
+    if any(ch in value for ch in ("\\", "\n", "\r", "\0")):
+        return None
+    parsed = urlparse(value)
+    if parsed.scheme or parsed.netloc:
+        return None
+    if parsed.path.startswith("//"):
+        return None
+    return value
 
 VISIBILITY_LABELS = {
     "public": "公开",
@@ -75,9 +93,11 @@ def label_of(mapping: dict, key: str, default: str | None = None) -> str:
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            flash("需要管理员权限", "danger")
-            return redirect(url_for("main.dashboard"))
+        if not current_user.is_authenticated:
+            flash("请先登录后再访问", "warning")
+            return redirect(url_for("auth.login"))
+        if not current_user.is_admin:
+            abort(403)
         return view(*args, **kwargs)
 
     return wrapped

@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from app.extensions import db
 from app.models import AuditLog, User
+from app.utils import safe_next_url
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -10,7 +11,8 @@ bp = Blueprint("auth", __name__, url_prefix="/auth")
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("main.dashboard"))
+        next_url = safe_next_url(request.args.get("next")) or url_for("main.dashboard")
+        return redirect(next_url)
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
@@ -22,7 +24,10 @@ def login():
             )
             db.session.commit()
             flash("登录成功", "success")
-            next_url = request.args.get("next") or url_for("main.dashboard")
+            next_url = (
+                safe_next_url(request.form.get("next") or request.args.get("next"))
+                or url_for("main.dashboard")
+            )
             return redirect(next_url)
         flash("用户名或密码错误", "danger")
     return render_template("auth/login.html")

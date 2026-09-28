@@ -4,19 +4,19 @@
 <div class="login-page">
   <div class="login-shell">
     <section class="login-hero">
-      <div class="pill">{{ COURSE_NAME }} · 课程大作业</div>
+      <div class="pill">企业知识管理 · 可鉴权 · 可问答</div>
       <h1 class="mb-2">{{ APP_NAME }}</h1>
-      <p class="mb-4 opacity-75">用 Flask + SQLite 做的企业知识库作业：管文档、控权限、简单问答和关系图。</p>
-      <ul class="list-unstyled mb-0 small">
-        <li class="mb-2">✓ 文档分级管理（公开 / 内部 / 机密）</li>
-        <li class="mb-2">✓ 关键词检索问答，并附来源摘要</li>
-        <li class="mb-2">✓ 文档—部门—分类关系图</li>
-        <li>✓ 收藏与操作日志</li>
-      </ul>
+      <p class="mb-3 opacity-75">
+        面向企业内部的轻量知识库：文档按公开 / 内部 / 机密分级；
+        问答只在你有权看到的片段里检索；关系图用来解释「这篇制度归哪个部门、挂了哪些关键词」。
+      </p>
+      <p class="mb-0 small opacity-75">
+        技术实现为 Flask + SQLite，问答默认是分词检索 + 摘要拼接（未配置大模型 Key 时不调用外部 API）。
+      </p>
     </section>
     <section class="login-form-pane">
       <h2 class="h5 mb-1">账号登录</h2>
-      <p class="text-muted small mb-4">下面已填好管理员账号，直接点登录即可。</p>
+      <p class="text-muted small mb-4">已预填管理员账号，可直接登录；也可改成 hr / it 验证权限差异。</p>
       <form method="post">
         <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
         <div class="mb-3">
@@ -27,16 +27,16 @@
           <label class="form-label">密码</label>
           <input class="form-control" type="password" name="password" value="admin123" required autocomplete="current-password">
         </div>
-        <button class="btn btn-primary w-100" type="submit">进入系统</button>
+        <button class="btn btn-primary w-100" type="submit">登录</button>
       </form>
       <hr class="my-4">
       <div class="small text-muted">
         <div class="fw-semibold text-dark mb-1">演示账号</div>
-        <div>管理员 admin / admin123</div>
-        <div>人事 hr / hr123</div>
-        <div>财务 finance / fin123</div>
-        <div>信息部 it / it123（可看机密）</div>
-        <div>产品部 product / prod123</div>
+        <div>admin / admin123（管理员）</div>
+        <div>hr / hr123（人事部）</div>
+        <div>finance / fin123（财务部）</div>
+        <div>it / it123（信息部，可看机密）</div>
+        <div>product / prod123（产品部）</div>
       </div>
     </section>
   </div>

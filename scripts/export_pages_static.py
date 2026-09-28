@@ -24,7 +24,7 @@ document.addEventListener('submit', function (e) {
   if (a.indexOf('/dashboard') >= 0) return;
   if (m === 'post' || a.indexOf('create') >= 0 || a.indexOf('manage') >= 0 || a.indexOf('categories') >= 0) {
     e.preventDefault();
-    alert('这是部署在 lkaya.com 的作业展示站（静态页），不连接真实后台。完整功能请本地运行 Flask。');
+    alert('这是部署在 lkaya.com 的静态展示站，不连接真实后台。完整功能请本地运行 Flask。');
   }
 });
 </script>
@@ -109,15 +109,15 @@ def main() -> None:
 
         entry = """<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>企业知识库 · 作业展示站</title>
+<title>智慧企业知识财富库 · 静态展示站</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="/static/css/app.css" rel="stylesheet"></head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark app-nav"><div class="container">
-<a class="navbar-brand fw-semibold" href="/dashboard/"><span class="brand-mark">KB</span> 企业知识库</a>
+<a class="navbar-brand fw-semibold" href="/dashboard/"><span class="brand-mark">知</span> 知识财富库</a>
 </div></nav>
 <main class="container py-5">
-<h1 class="h3 page-title mb-2">作业展示站入口</h1>
+<h1 class="h3 page-title mb-2">静态展示站入口</h1>
 <p class="text-muted mb-4">静态导出 · 外观与本地 Flask 一致 · 写入操作会提示未连接后台</p>
 <div class="row g-3">
 <div class="col-md-6"><div class="card panel"><div class="card-body">
@@ -134,11 +134,11 @@ def main() -> None:
 </div></div></div>
 <div class="col-md-6"><div class="card panel"><div class="card-body">
 <div class="fw-semibold mb-2">本站数据规模（展示）</div>
-<p class="mb-0 small text-muted">已充实用户、分类、文档、问答与审计等虚构演示数据，便于课堂演示。</p>
+<p class="mb-0 small text-muted">已充实用户、分类、文档、问答与审计等虚构演示数据，便于功能演示。</p>
 </div></div></div>
 </div>
 </main>
-<footer class="app-footer"><div class="container small text-muted">综合项目实践 · 企业知识库管理系统 v1.0 · lkaya.com 展示站</div></footer>
+<footer class="app-footer"><div class="container small text-muted">智慧企业知识财富库 · lkaya.com 展示站</div></footer>
 </body></html>
 """
         (OUT / "index.html").write_text(entry, encoding="utf-8")

@@ -1,23 +1,27 @@
 {% extends "base.html" %}
-{% block title %}智能问答{% endblock %}
+{% block title %}站内问答{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <div>
-    <h1 class="h3 page-title mb-1">智能问答</h1>
+    <h1 class="h3 page-title mb-1">站内问答</h1>
     <div class="text-muted small">
-      当前模式：{% if llm_enabled %}<span class="text-success">大模型生成（已配置 API）</span>{% else %}<span>本地检索摘要（无需 API Key）</span>{% endif %}
+      {% if llm_enabled %}
+      已配置外部大模型：命中片段后会调用模型组织回答；仍只使用你有权访问的文档。
+      {% else %}
+      当前为本地模式：对问题分词，在权限内的知识片段里打分取 Top-K，再拼成带来源的摘要回答（不调用外部 API）。
+      {% endif %}
     </div>
   </div>
-  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('graph.view') }}">查看关系图</a>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('graph.view') }}">对照关系图</a>
 </div>
 
 <div class="card panel mb-3">
   <div class="card-body">
     <form method="post">
-      <label class="form-label fw-semibold">请输入问题</label>
-      <textarea class="form-control mb-3" name="question" rows="3" required placeholder="例如：员工年假有几天？差旅住宿标准是多少？">{{ question }}</textarea>
+      <label class="form-label fw-semibold">输入业务问题</label>
+      <textarea class="form-control mb-3" name="question" rows="3" required placeholder="尽量带上业务词，例如：年假天数、差旅住宿、采购两万元审批">{{ question }}</textarea>
       <div class="mb-3">
-        <div class="small text-muted mb-1">试试这些问题：</div>
+        <div class="small text-muted mb-1">可点选示例（会填入输入框并查询）：</div>
         {% for s in suggestions %}
         <a class="suggest-chip" href="{{ url_for('qa.ask_page', q=s) }}">{{ s }}</a>
         {% endfor %}
@@ -39,7 +43,7 @@
 </div>
 
 {% if result.hits %}
-<h2 class="h6 text-muted mb-2">检索依据（Top {{ result.hits|length }}）</h2>
+<h2 class="h6 text-muted mb-2">检索依据（按相关度，共 {{ result.hits|length }} 条）</h2>
 <div class="row g-3 mb-4">
   {% for h in result.hits %}
   <div class="col-md-6">
@@ -72,13 +76,8 @@
   </ul>
   {% else %}
   <div class="empty-state py-4">
-    <div class="small">还没有提问记录，点击上方推荐问题试试</div>
+    <div class="small">还没有提问记录。可从上方示例点一条试试。</div>
   </div>
   {% endif %}
 </div>
-{% endblock %}
-{% block scripts %}
-<script>
-  // 点击推荐问题时，把文案填入输入框（若带 q 参数已由服务端填入）
-</script>
 {% endblock %}

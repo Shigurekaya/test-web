@@ -12,7 +12,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark app-nav">
   <div class="container">
     <a class="navbar-brand fw-semibold" href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('auth.login') }}">
-      <span class="brand-mark">KB</span> 企业知识库
+      <span class="brand-mark">知</span> 知识财富库
     </a>
     {% if current_user.is_authenticated %}
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
@@ -64,8 +64,8 @@
 
 <footer class="app-footer">
   <div class="container d-flex flex-wrap justify-content-between gap-2 small text-muted">
-    <span>{{ COURSE_NAME }} · {{ APP_NAME }} v{{ APP_VERSION }}</span>
-    <span>Flask + SQLite · 课程大作业</span>
+    <span>{{ APP_NAME }} v{{ APP_VERSION }}</span>
+    <span>演示数据均为虚构 · 仅供功能演示</span>
   </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

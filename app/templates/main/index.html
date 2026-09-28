@@ -4,27 +4,25 @@
 <div class="login-page">
   <div class="login-shell">
     <section class="login-hero">
-      <div class="pill">{{ COURSE_NAME }} · 课程大作业</div>
+      <div class="pill">智慧企业知识财富库</div>
       <h1 class="mb-2">{{ APP_NAME }}</h1>
-      <p class="mb-4 opacity-75">基于 Flask + SQLite 的课程作业：文档管理、权限、站内问答和关系图。</p>
-      <ul class="list-unstyled mb-0 small">
-        <li class="mb-2">✓ 知识文档增删改查与分类搜索</li>
-        <li class="mb-2">✓ 公开 / 内部 / 机密三级权限</li>
-        <li class="mb-2">✓ 关键词检索问答（附来源摘要）</li>
-        <li>✓ 文档—部门—分类关系图</li>
-      </ul>
+      <p class="mb-3 opacity-75">
+        制度、手册、项目材料散落在邮件和网盘里，找一条规定往往要问好几个人。
+        本系统把可公开到机密的文档收进同一库：能按权限浏览，能用业务问题检索，也能看文档与部门的关联。
+      </p>
+      <p class="mb-0 small opacity-75">
+        演示时建议：用 <strong>admin</strong> 看全貌 → 问「年假有几天」→ 再换 <strong>hr</strong> / <strong>it</strong> 对比机密文档是否可见。
+      </p>
     </section>
     <section class="login-form-pane">
-      <h2 class="h5 mb-1">开始使用</h2>
-      <p class="text-muted small mb-4">未登录时从本页进入登录；登录后会进入工作台。</p>
+      <h2 class="h5 mb-1">进入系统</h2>
+      <p class="text-muted small mb-4">未登录从本页进入；登录后默认打开工作台。</p>
       <a class="btn btn-primary w-100 mb-3" href="{{ url_for('auth.login') }}">去登录</a>
       <div class="small text-muted">
-        <div class="fw-semibold text-dark mb-1">演示账号</div>
-        <div>管理员 admin / admin123</div>
-        <div>人事 hr / hr123</div>
-        <div>财务 finance / fin123</div>
-        <div>信息部 it / it123</div>
-        <div>产品部 product / prod123</div>
+        <div class="fw-semibold text-dark mb-1">演示账号（密码见登录页）</div>
+        <div>admin — 管理员，可看全部与审计</div>
+        <div>hr / finance / product — 普通业务部门</div>
+        <div>it — 信息部，可打开本部门机密文档</div>
       </div>
     </section>
   </div>

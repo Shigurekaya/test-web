@@ -1,29 +1,59 @@
 {% extends "base.html" %}
 {% block title %}工作台{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <div>
-    <h1 class="h3 page-title mb-1">工作台</h1>
-    <div class="text-muted">
+<div class="hero-strip">
+  <section class="hero-panel">
+    <div class="small opacity-75 mb-2">欢迎回来</div>
+    <h1>工作台</h1>
+    <p>
       {{ current_user.display_name }}（{{ current_user.department }}）—
       当前权限下可看 {{ doc_count }} 篇文档，已收藏 {{ fav_count }} 篇，近 7 天提问 {{ qa_week }} 次。
+    </p>
+    <div class="d-flex gap-2 mt-3 flex-wrap">
+      <a class="btn btn-light btn-sm" href="{{ url_for('knowledge.create') }}">写一篇文档</a>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('knowledge.list_docs') }}">浏览知识库</a>
+      <a class="btn btn-outline-light btn-sm" href="{{ url_for('qa.ask_page') }}">去提问</a>
     </div>
-  </div>
-  <div class="d-flex gap-2">
-    <a class="btn btn-outline-primary" href="{{ url_for('knowledge.create') }}">写一篇文档</a>
-    <a class="btn btn-primary" href="{{ url_for('qa.ask_page') }}">去提问</a>
-  </div>
+  </section>
+  <aside class="quick-rail">
+    <div class="small text-muted mb-1">一键试用提问</div>
+    {% for q in quick_questions %}
+    <form method="post" action="{{ url_for('qa.ask_page') }}">
+      <button type="submit" name="question" value="{{ q }}">{{ q }}</button>
+    </form>
+    {% endfor %}
+  </aside>
 </div>
 
 <div class="row g-3 mb-3">
-  <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body"><div class="text-muted small">我可访问的文档</div><div class="fs-3 fw-semibold">{{ doc_count }}</div></div></div></div>
-  <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body"><div class="text-muted small">我的提问记录</div><div class="fs-3 fw-semibold">{{ qa_count }}</div></div></div></div>
-  <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body"><div class="text-muted small">库内已发布</div><div class="fs-3 fw-semibold">{{ total_published }}</div></div></div></div>
-  <div class="col-6 col-md-3"><div class="card stat-card"><div class="card-body"><div class="text-muted small">关系图节点/边</div><div class="fs-3 fw-semibold">{{ node_count }}/{{ edge_count }}</div></div></div></div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card"><div class="card-body">
+      <div class="stat-label">我可访问的文档</div>
+      <div class="fs-3">{{ doc_count }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card"><div class="card-body">
+      <div class="stat-label">我的提问记录</div>
+      <div class="fs-3">{{ qa_count }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card"><div class="card-body">
+      <div class="stat-label">库内已发布</div>
+      <div class="fs-3">{{ total_published }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card"><div class="card-body">
+      <div class="stat-label">关系图节点/边</div>
+      <div class="fs-3">{{ node_count }}/{{ edge_count }}</div>
+    </div></div>
+  </div>
 </div>
 
 <div class="card panel mb-3">
-  <div class="card-header bg-white fw-semibold">建议这样验收</div>
+  <div class="card-header bg-transparent fw-semibold">建议试用路径</div>
   <div class="card-body small">
     <ol class="mb-0 ps-3">
       <li class="mb-1">在「知识文档」搜「年假」，打开《员工年休假管理办法》，看密级与部门字段。</li>
@@ -34,28 +64,51 @@
   </div>
 </div>
 
-{% if dept_stats %}
-<div class="card panel mb-3">
-  <div class="card-header bg-white fw-semibold">当前账号可见文档的部门分布</div>
-  <div class="card-body">
-    <div class="row g-2">
-      {% for name, cnt in dept_stats %}
-      <div class="col-6 col-md-3 col-lg-2">
-        <div class="dept-pill">
-          <span class="text-muted small">{{ name }}</span>
-          <strong>{{ cnt }}</strong>
+{% if dept_stats or cat_stats %}
+<div class="row g-3 mb-3">
+  {% if dept_stats %}
+  <div class="col-lg-7">
+    <div class="card panel h-100">
+      <div class="card-header bg-transparent fw-semibold">可见文档 · 部门分布</div>
+      <div class="card-body">
+        <div class="row g-2">
+          {% for name, cnt in dept_stats %}
+          <div class="col-6 col-md-4">
+            <div class="dept-pill">
+              <span class="text-muted small">{{ name }}</span>
+              <strong>{{ cnt }}</strong>
+            </div>
+          </div>
+          {% endfor %}
         </div>
       </div>
-      {% endfor %}
     </div>
   </div>
+  {% endif %}
+  {% if cat_stats %}
+  <div class="col-lg-5">
+    <div class="card panel h-100">
+      <div class="card-header bg-transparent fw-semibold">可见文档 · 分类分布</div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          {% for name, cnt in cat_stats %}
+          <div class="cat-pill">
+            <span class="text-muted small">{{ name }}</span>
+            <strong>{{ cnt }}</strong>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 
 <div class="row g-3">
   <div class="col-lg-6">
     <div class="card panel h-100">
-      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+      <div class="card-header bg-transparent fw-semibold d-flex justify-content-between">
         <span>最近更新的可访问文档</span>
         <a class="small" href="{{ url_for('knowledge.list_docs') }}">全部</a>
       </div>
@@ -76,7 +129,7 @@
   </div>
   <div class="col-lg-6">
     <div class="card panel h-100">
-      <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+      <div class="card-header bg-transparent fw-semibold d-flex justify-content-between">
         <span>我最近问过的问题</span>
         <a class="small" href="{{ url_for('qa.ask_page') }}">去提问</a>
       </div>
@@ -96,7 +149,7 @@
 
 {% if current_user.is_admin %}
 <div class="card panel mt-3">
-  <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+  <div class="card-header bg-transparent fw-semibold d-flex justify-content-between">
     <span>最近审计动态</span>
     <a class="small" href="{{ url_for('admin.audits') }}">全部（{{ audit_count }}）</a>
   </div>

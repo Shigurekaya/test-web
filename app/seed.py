@@ -865,12 +865,20 @@ def _author_for(department: str, admin: User) -> User:
 
 def _purge_test_docs(app):
     """清理调试产生的测试稿，避免污染展示。"""
+    from app.services.graph import cleanup_orphan_document_nodes, remove_document_graph
+
     junk = Document.query.filter(Document.title.like("%测试稿%")).all()
     for doc in junk:
+        remove_document_graph(doc)
         db.session.delete(doc)
-    if junk:
+    orphans = cleanup_orphan_document_nodes()
+    if junk or orphans:
         db.session.flush()
-        app.logger.info("seed: purged %s test documents", len(junk))
+        app.logger.info(
+            "seed: purged %s test documents, %s orphan graph nodes",
+            len(junk),
+            orphans,
+        )
 
 
 def _upsert_docs(cats, admin, app):

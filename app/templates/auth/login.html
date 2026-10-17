@@ -16,8 +16,8 @@
     </section>
     <section class="login-form-pane">
       <h2 class="h5 mb-1">账号登录</h2>
-      <p class="text-muted small mb-4">已预填管理员账号，可直接登录；也可改成 hr / it 验证权限差异。</p>
-      <form method="post">
+      <p class="text-muted small mb-3">已预填管理员账号，可直接登录；也可点下方演示身份快速切换。</p>
+      <form method="post" class="mb-3">
         <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
         <div class="mb-3">
           <label class="form-label">用户名</label>
@@ -29,14 +29,17 @@
         </div>
         <button class="btn btn-primary w-100" type="submit">登录</button>
       </form>
-      <hr class="my-4">
-      <div class="small text-muted">
-        <div class="fw-semibold text-dark mb-1">演示账号</div>
-        <div>admin / admin123（管理员）</div>
-        <div>hr / hr123（人事部）</div>
-        <div>finance / fin123（财务部）</div>
-        <div>it / it123（信息部，可看机密）</div>
-        <div>product / prod123（产品部）</div>
+      <div class="small text-muted mb-2 fw-semibold text-dark">演示账号（点击填入）</div>
+      <div class="d-grid gap-2">
+        {% for a in demo_accounts %}
+        <button type="button" class="demo-account" data-demo-user="{{ a.username }}" data-demo-pass="{{ a.password }}">
+          <span>
+            <span class="name">{{ a.username }}</span>
+            <span class="hint d-block">{{ a.label }} · {{ a.hint }}</span>
+          </span>
+          <span class="hint">填入</span>
+        </button>
+        {% endfor %}
       </div>
     </section>
   </div>

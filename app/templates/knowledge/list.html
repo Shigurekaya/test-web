@@ -5,43 +5,64 @@
   <div>
     <h1 class="h3 page-title mb-1">知识文档</h1>
     <div class="text-muted small">
-      仅列出当前账号有权阅读的已发布文档，共 {{ total }} 篇{% if q %} · 筛选「{{ q }}」{% endif %}。
+      仅列出当前账号有权阅读的已发布文档，共 {{ total }} 篇
+      {% if q %} · 关键词「{{ q }}」{% endif %}
+      {% if category_id %}
+        {% for c in categories if c.id == category_id %} · 分类「{{ c.name }}」{% endfor %}
+      {% endif %}
+      {% if department %} · 部门「{{ department }}」{% endif %}
+      {% if visibility %} · 密级「{{ visibility_labels.get(visibility, visibility) }}」{% endif %}。
       机密文档对非本部门账号不可见。
     </div>
   </div>
   <a class="btn btn-primary" href="{{ url_for('knowledge.create') }}">新建文档</a>
 </div>
 
-<form class="filter-bar row g-2 mb-3" method="get">
-  <div class="col-md-4">
-    <input class="form-control" name="q" value="{{ q }}" placeholder="搜索标题 / 摘要 / 正文 / 标签">
+<form class="filter-bar row g-2 mb-3 align-items-end" method="get" id="docFilterForm">
+  <div class="col-md-3">
+    <label class="form-label small text-muted mb-1">搜索</label>
+    <input class="form-control" name="q" value="{{ q }}" placeholder="标题 / 摘要 / 正文 / 标签">
   </div>
   <div class="col-md-2">
-    <select class="form-select" name="category_id">
-      <option value="">全部分类</option>
+    <label class="form-label small text-muted mb-1">分类</label>
+    <select class="form-select" name="category_id" onchange="this.form.submit()">
+      <option value="">全部</option>
       {% for c in categories %}
       <option value="{{ c.id }}" {% if category_id==c.id %}selected{% endif %}>{{ c.name }}</option>
       {% endfor %}
     </select>
   </div>
   <div class="col-md-2">
-    <select class="form-select" name="department">
-      <option value="">全部部门</option>
+    <label class="form-label small text-muted mb-1">部门</label>
+    <select class="form-select" name="department" onchange="this.form.submit()">
+      <option value="">全部</option>
       {% for d in departments %}
       <option value="{{ d }}" {% if department==d %}selected{% endif %}>{{ d }}</option>
       {% endfor %}
     </select>
   </div>
   <div class="col-md-2">
-    <select class="form-select" name="visibility">
-      <option value="">全部密级</option>
+    <label class="form-label small text-muted mb-1">密级</label>
+    <select class="form-select" name="visibility" onchange="this.form.submit()">
+      <option value="">全部</option>
       {% for key, label in visibility_labels.items() %}
       <option value="{{ key }}" {% if visibility==key %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
   </div>
-  <div class="col-md-2 d-grid">
-    <button class="btn btn-outline-primary" type="submit">筛选</button>
+  <div class="col-md-1">
+    <label class="form-label small text-muted mb-1">排序</label>
+    <select class="form-select" name="sort" onchange="this.form.submit()">
+      <option value="updated" {% if sort=='updated' %}selected{% endif %}>更新</option>
+      <option value="title" {% if sort=='title' %}selected{% endif %}>标题</option>
+      <option value="department" {% if sort=='department' %}selected{% endif %}>部门</option>
+    </select>
+  </div>
+  <div class="col-md-2 d-flex gap-2">
+    <button class="btn btn-outline-primary flex-grow-1" type="submit">筛选</button>
+    {% if has_filter %}
+    <a class="btn btn-outline-secondary" href="{{ url_for('knowledge.list_docs') }}">清空</a>
+    {% endif %}
   </div>
 </form>
 
@@ -75,15 +96,15 @@
 <nav class="mt-4">
   <ul class="pagination justify-content-center">
     <li class="page-item {% if page<=1 %}disabled{% endif %}">
-      <a class="page-link" href="{{ url_for('knowledge.list_docs', q=q, category_id=category_id or '', department=department, visibility=visibility, page=page-1) }}">上一页</a>
+      <a class="page-link" href="{{ url_for('knowledge.list_docs', q=q, category_id=category_id or '', department=department, visibility=visibility, sort=sort, page=page-1) }}">上一页</a>
     </li>
     {% for p in range(1, pages+1) %}
     <li class="page-item {% if p==page %}active{% endif %}">
-      <a class="page-link" href="{{ url_for('knowledge.list_docs', q=q, category_id=category_id or '', department=department, visibility=visibility, page=p) }}">{{ p }}</a>
+      <a class="page-link" href="{{ url_for('knowledge.list_docs', q=q, category_id=category_id or '', department=department, visibility=visibility, sort=sort, page=p) }}">{{ p }}</a>
     </li>
     {% endfor %}
     <li class="page-item {% if page>=pages %}disabled{% endif %}">
-      <a class="page-link" href="{{ url_for('knowledge.list_docs', q=q, category_id=category_id or '', department=department, visibility=visibility, page=page+1) }}">下一页</a>
+      <a class="page-link" href="{{ url_for('knowledge.list_docs', q=q, category_id=category_id or '', department=department, visibility=visibility, sort=sort, page=page+1) }}">下一页</a>
     </li>
   </ul>
 </nav>
@@ -91,7 +112,8 @@
 
 {% else %}
 <div class="card panel">
-    <div class="empty-state">
+  <div class="empty-state">
+    <div class="empty-mark">空</div>
     <div class="fw-semibold mb-1">没有匹配的文档</div>
     <div class="small mb-3">试试清空筛选条件，或新建一篇知识文档</div>
     <a class="btn btn-primary btn-sm" href="{{ url_for('knowledge.create') }}">新建文档</a>

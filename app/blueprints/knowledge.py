@@ -1,25 +1,60 @@
+from datetime import timedelta
+
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from app.extensions import db
 from app.models import AuditLog, Category, Document, Favorite, KnowledgeChunk
-from app.services.graph import sync_document_graph
-from app.services.rag import can_view_document, rebuild_chunks_for_document, searchable_documents
-from app.utils import STATUS_LABELS, VISIBILITY_LABELS, admin_required
+from app.services.graph import remove_document_graph, sync_document_graph
+from app.services.rag import (
+    can_view_document,
+    rank_documents,
+    rebuild_chunks_for_document,
+    related_documents,
+    searchable_documents,
+)
+from app.utils import (
+    DEPARTMENTS,
+    STATUS_LABELS,
+    VISIBILITY_LABELS,
+    admin_required,
+    auto_summary,
+    normalize_choice,
+    utcnow,
+)
 
 bp = Blueprint("knowledge", __name__, url_prefix="/knowledge")
 
-DEPARTMENTS = [
-    "综合部",
-    "人事部",
-    "财务部",
-    "信息部",
-    "产品部",
-    "运营部",
-    "市场部",
-    "法务部",
-    "技术部",
-]
+
+def _apply_doc_form(doc: Document | None) -> Document:
+    title = request.form.get("title", "").strip()
+    content = request.form.get("content", "").strip()
+    summary = request.form.get("summary", "").strip()[:500]
+    if not summary:
+        summary = auto_summary(content)
+
+    cat_raw = request.form.get("category_id") or ""
+    category_id = int(cat_raw) if str(cat_raw).isdigit() else None
+    visibility = normalize_choice(request.form.get("visibility"), VISIBILITY_LABELS, "internal")
+    status = normalize_choice(request.form.get("status"), STATUS_LABELS, "published")
+    department = request.form.get("department") or (doc.department if doc else current_user.department)
+    if department not in DEPARTMENTS:
+        department = current_user.department
+
+    if doc is None:
+        doc = Document(author_id=current_user.id)
+        db.session.add(doc)
+
+    doc.title = title
+    doc.content = content
+    doc.summary = summary
+    doc.department = department
+    doc.visibility = visibility
+    doc.status = status
+    doc.version = (request.form.get("version") or "1.0").strip() or "1.0"
+    doc.tags = request.form.get("tags", "").strip()
+    doc.category_id = category_id
+    return doc
 
 
 @bp.route("/")
@@ -29,6 +64,7 @@ def list_docs():
     category_id = request.args.get("category_id", type=int)
     department = request.args.get("department", "").strip()
     visibility = request.args.get("visibility", "").strip()
+    sort = request.args.get("sort", "updated").strip() or "updated"
     page = max(request.args.get("page", 1, type=int) or 1, 1)
     per_page = 12
 
@@ -39,16 +75,15 @@ def list_docs():
         docs = [d for d in docs if d.department == department]
     if visibility:
         docs = [d for d in docs if d.visibility == visibility]
+
     if q:
-        ql = q.lower()
-        docs = [
-            d
-            for d in docs
-            if ql in (d.title or "").lower()
-            or ql in (d.content or "").lower()
-            or ql in (d.tags or "").lower()
-            or ql in (d.summary or "").lower()
-        ]
+        docs = rank_documents(docs, q)
+    elif sort == "title":
+        docs = sorted(docs, key=lambda d: d.title or "")
+    elif sort == "department":
+        docs = sorted(docs, key=lambda d: (d.department or "", -(d.updated_at.timestamp() if d.updated_at else 0)))
+    else:
+        docs = sorted(docs, key=lambda d: d.updated_at or utcnow(), reverse=True)
 
     total = len(docs)
     pages = max((total + per_page - 1) // per_page, 1)
@@ -56,6 +91,7 @@ def list_docs():
     start = (page - 1) * per_page
     page_docs = docs[start : start + per_page]
     categories = Category.query.order_by(Category.name).all()
+    has_filter = bool(q or category_id or department or visibility)
 
     return render_template(
         "knowledge/list.html",
@@ -66,9 +102,11 @@ def list_docs():
         category_id=category_id,
         department=department,
         visibility=visibility,
+        sort=sort,
         page=page,
         pages=pages,
         total=total,
+        has_filter=has_filter,
         visibility_labels=VISIBILITY_LABELS,
     )
 
@@ -79,30 +117,33 @@ def detail(doc_id: int):
     doc = db.get_or_404(Document, doc_id)
     if not can_view_document(current_user, doc):
         abort(403)
+    if doc.status != "published" and not (
+        current_user.is_admin or doc.author_id == current_user.id
+    ):
+        abort(403)
+
     fav = Favorite.query.filter_by(user_id=current_user.id, document_id=doc.id).first()
-    db.session.add(
-        AuditLog(
-            user_id=current_user.id,
-            action="view_document",
-            detail=f"查看文档 #{doc.id} {doc.title}",
-        )
+
+    # 同一用户 2 分钟内重复打开不刷审计
+    recent = (
+        AuditLog.query.filter_by(user_id=current_user.id, action="view_document")
+        .filter(AuditLog.created_at >= utcnow() - timedelta(minutes=2))
+        .order_by(AuditLog.created_at.desc())
+        .limit(5)
+        .all()
     )
-    db.session.commit()
-
-    related = []
-    if doc.category_id:
-        candidates = (
-            Document.query.filter(
-                Document.category_id == doc.category_id,
-                Document.id != doc.id,
-                Document.status == "published",
+    already = any(f"#{doc.id} " in (log.detail or "") for log in recent)
+    if not already:
+        db.session.add(
+            AuditLog(
+                user_id=current_user.id,
+                action="view_document",
+                detail=f"查看文档 #{doc.id} {doc.title}",
             )
-            .order_by(Document.updated_at.desc())
-            .limit(8)
-            .all()
         )
-        related = [c for c in candidates if can_view_document(current_user, c)][:4]
+        db.session.commit()
 
+    related = related_documents(doc, current_user, limit=4)
     chunk_count = KnowledgeChunk.query.filter_by(document_id=doc.id).count()
     return render_template(
         "knowledge/detail.html",
@@ -130,21 +171,7 @@ def create():
                 visibility_labels=VISIBILITY_LABELS,
                 status_labels=STATUS_LABELS,
             )
-        cat_raw = request.form.get("category_id") or ""
-        category_id = int(cat_raw) if str(cat_raw).isdigit() else None
-        doc = Document(
-            title=title,
-            content=content,
-            summary=request.form.get("summary", "").strip()[:500],
-            department=request.form.get("department") or current_user.department,
-            visibility=request.form.get("visibility", "internal"),
-            status=request.form.get("status", "published"),
-            version=request.form.get("version", "1.0"),
-            tags=request.form.get("tags", "").strip(),
-            category_id=category_id,
-            author_id=current_user.id,
-        )
-        db.session.add(doc)
+        doc = _apply_doc_form(None)
         db.session.commit()
         rebuild_chunks_for_document(
             doc,
@@ -176,16 +203,19 @@ def edit(doc_id: int):
         abort(403)
     categories = Category.query.order_by(Category.name).all()
     if request.method == "POST":
-        doc.title = request.form.get("title", "").strip()
-        doc.content = request.form.get("content", "").strip()
-        doc.summary = request.form.get("summary", "").strip()[:500]
-        doc.department = request.form.get("department") or doc.department
-        doc.visibility = request.form.get("visibility", "internal")
-        doc.status = request.form.get("status", "published")
-        doc.version = request.form.get("version", "1.0")
-        doc.tags = request.form.get("tags", "").strip()
-        cat = request.form.get("category_id")
-        doc.category_id = int(cat) if cat and str(cat).isdigit() else None
+        title = request.form.get("title", "").strip()
+        content = request.form.get("content", "").strip()
+        if not title or not content:
+            flash("标题与正文不能为空", "danger")
+            return render_template(
+                "knowledge/form.html",
+                categories=categories,
+                departments=DEPARTMENTS,
+                doc=doc,
+                visibility_labels=VISIBILITY_LABELS,
+                status_labels=STATUS_LABELS,
+            )
+        _apply_doc_form(doc)
         db.session.commit()
         rebuild_chunks_for_document(
             doc,
@@ -216,6 +246,7 @@ def delete(doc_id: int):
     if not (current_user.is_admin or doc.author_id == current_user.id):
         abort(403)
     title = doc.title
+    remove_document_graph(doc)
     db.session.delete(doc)
     db.session.add(
         AuditLog(user_id=current_user.id, action="delete_document", detail=f"删除文档 {title}")
@@ -250,6 +281,7 @@ def favorites():
         .order_by(Favorite.created_at.desc())
         .all()
     )
+    items = [i for i in items if i.document and can_view_document(current_user, i.document)]
     return render_template("knowledge/favorites.html", items=items)
 
 

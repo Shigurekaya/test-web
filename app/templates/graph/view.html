@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 {% block title %}关系图{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <div>
-    <h1 class="h3 mb-1">关系图</h1>
+    <h1 class="h3 page-title mb-1">关系图</h1>
     <div class="text-muted small">把「文档归哪个部门、挂了哪些关键词」摊开看，方便对照问答命中的来源是否合理。</div>
   </div>
   {% if current_user.is_admin %}
   <a class="btn btn-outline-primary" href="{{ url_for('graph.manage') }}">手工补节点/边</a>
   {% endif %}
 </div>
-<div id="graph-chart" class="shadow-sm border"></div>
+<div id="graph-chart"></div>
 <div class="mt-3 small text-muted">
   颜色：蓝=文档，绿=部门，橙=项目，紫=关键词，红=概念。可拖拽节点、滚轮缩放。管理员可在维护页补充遗漏关系。
 </div>
@@ -22,14 +22,21 @@ async function renderGraph() {
   const res = await fetch("{{ url_for('graph.data') }}");
   const data = await res.json();
   const chart = echarts.init(document.getElementById('graph-chart'));
-  const categories = [
-    {name: 'document'}, {name: 'department'}, {name: 'project'}, {name: 'keyword'}, {name: 'concept'}
-  ];
+  const typeOrder = ['document', 'department', 'project', 'keyword', 'concept'];
+  const typeLabel = {
+    document: '文档',
+    department: '部门',
+    project: '项目',
+    keyword: '关键词',
+    concept: '概念'
+  };
+  const categories = typeOrder.map(t => ({ name: typeLabel[t] }));
+  const typeIndex = Object.fromEntries(typeOrder.map((t, i) => [t, i]));
   chart.setOption({
     tooltip: {
       formatter: function (p) {
         if (p.dataType === 'edge') return p.data.relation || '关联';
-        return p.data.name + '<br/>类型：' + p.data.category;
+        return p.data.name + '<br/>类型：' + (typeLabel[p.data.nodeType] || p.data.nodeType || '');
       }
     },
     legend: [{ data: categories.map(c => c.name) }],
@@ -42,7 +49,8 @@ async function renderGraph() {
       data: data.nodes.map(n => ({
         id: String(n.id),
         name: n.name,
-        category: n.category,
+        category: typeIndex[n.category] ?? 0,
+        nodeType: n.category,
         symbolSize: n.symbolSize,
         itemStyle: n.itemStyle,
         value: n.document_id || ''
@@ -54,9 +62,14 @@ async function renderGraph() {
         label: { show: true, formatter: l.relation, fontSize: 10 }
       })),
       label: { show: true, position: 'right', fontSize: 11 },
-      force: { repulsion: 180, edgeLength: [60, 140] },
+      force: { repulsion: 200, edgeLength: [70, 150] },
       lineStyle: { color: '#94a3b8', curveness: 0.15 }
     }]
+  });
+  chart.on('click', function (params) {
+    if (params.dataType === 'node' && params.data.value) {
+      window.location.href = '/knowledge/' + params.data.value;
+    }
   });
   window.addEventListener('resize', () => chart.resize());
 }

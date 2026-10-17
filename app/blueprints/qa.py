@@ -30,21 +30,21 @@ SUGGESTED_QUESTIONS = [
 def ask_page():
     result = None
     question = ""
+    # 仅 POST 触发问答，避免示例链接用 GET 时刷新页面重复写入历史
     if request.method == "POST":
         question = request.form.get("question", "").strip()
+        if question:
+            result = ask(question, current_user, current_app.config)
+            db.session.add(
+                AuditLog(
+                    user_id=current_user.id,
+                    action="ask_qa",
+                    detail=f"提问：{question[:80]}",
+                )
+            )
+            db.session.commit()
     else:
         question = request.args.get("q", "").strip()
-
-    if question:
-        result = ask(question, current_user, current_app.config)
-        db.session.add(
-            AuditLog(
-                user_id=current_user.id,
-                action="ask_qa",
-                detail=f"提问：{question[:80]}",
-            )
-        )
-        db.session.commit()
 
     history = (
         QAHistory.query.filter_by(user_id=current_user.id)

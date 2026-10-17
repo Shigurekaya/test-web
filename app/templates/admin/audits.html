@@ -85,6 +85,9 @@
     document.getElementById('auditFoot').textContent = '筛选后显示 ' + shown + ' 条（原始加载 {{ logs|length }}）';
   }
   document.getElementById('auditFilterBtn').addEventListener('click', apply);
+  document.getElementById('auditAction').addEventListener('change', apply);
+  document.getElementById('auditUser').addEventListener('input', apply);
+  document.getElementById('auditDetail').addEventListener('input', apply);
   document.getElementById('auditFilterReset').addEventListener('click', function () {
     document.getElementById('auditUser').value = '';
     document.getElementById('auditAction').value = '';

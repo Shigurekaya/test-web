@@ -2,18 +2,43 @@
 {% block title %}问答详情{% endblock %}
 {% block content %}
 <a href="{{ url_for('qa.ask_page') }}" class="btn btn-sm btn-link px-0 mb-2">← 返回问答</a>
-<h1 class="h4 page-title mb-3">{{ item.question }}</h1>
-<div class="mb-2">
-  <span class="badge text-bg-secondary">{{ item.mode|mode_label }}</span>
-  <span class="text-muted small">{{ item.created_at|dt }}</span>
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+  <div>
+    <h1 class="h4 page-title mb-1">{{ item.question }}</h1>
+    <div>
+      <span class="badge text-bg-{{ 'success' if item.mode=='llm' else 'secondary' }}">{{ item.mode|mode_label }}</span>
+      <span class="text-muted small ms-1">{{ item.created_at|dt }}</span>
+    </div>
+  </div>
+  <form method="post" action="{{ url_for('qa.ask_page') }}">
+    <input type="hidden" name="question" value="{{ item.question }}">
+    <button class="btn btn-outline-primary btn-sm" type="submit">用同一问题再问一次</button>
+  </form>
 </div>
-<div class="answer-box mb-3">{{ item.answer }}</div>
-<h2 class="h6">来源</h2>
-<ul>
-  {% for s in sources %}
-  <li><a href="{{ url_for('knowledge.detail', doc_id=s.document_id) }}">{{ s.title }}</a>（相关度 {{ s.score }}）</li>
+
+<div class="card panel mb-3">
+  <div class="card-header bg-white fw-semibold">当时回答</div>
+  <div class="card-body">
+    <div class="answer-box mb-0">{{ item.answer }}</div>
+  </div>
+</div>
+
+<div class="card panel">
+  <div class="card-header bg-white fw-semibold">引用的文档来源</div>
+  {% if sources %}
+  <ul class="list-group list-group-flush">
+    {% for s in sources %}
+    <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+      <a href="{{ url_for('knowledge.detail', doc_id=s.document_id) }}">{{ s.title }}</a>
+      <span class="badge text-bg-light">相关度 {{ s.score }}</span>
+    </li>
+    {% endfor %}
+  </ul>
   {% else %}
-  <li class="text-muted">无</li>
-  {% endfor %}
-</ul>
+  <div class="empty-state py-4">
+    <div class="small text-muted">当时未记录到来源条目（可能是空命中或早期数据）。</div>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

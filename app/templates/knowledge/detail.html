@@ -18,7 +18,10 @@
     </div>
   </div>
   <div class="d-flex gap-2 flex-wrap">
-    <a class="btn btn-outline-success" href="{{ url_for('qa.ask_page', q=doc.title ~ ' 的要点是什么') }}">基于本文提问</a>
+    <form method="post" action="{{ url_for('qa.ask_page') }}">
+      <input type="hidden" name="question" value="{{ doc.title }} 的要点是什么">
+      <button class="btn btn-outline-success" type="submit">基于本文提问</button>
+    </form>
     <form method="post" action="{{ url_for('knowledge.toggle_favorite', doc_id=doc.id) }}">
       <button class="btn btn-outline-warning" type="submit">{{ '取消收藏' if is_fav else '收藏' }}</button>
     </form>
@@ -34,9 +37,9 @@
 <div class="row g-3">
   <div class="col-lg-8">
     {% if doc.summary %}
-    <div class="alert alert-light border mb-3">
+    <div class="summary-callout mb-3">
       <div class="small text-muted mb-1">摘要</div>
-      {{ doc.summary }}
+      <div>{{ doc.summary }}</div>
     </div>
     {% endif %}
     <div class="card panel">
@@ -59,14 +62,14 @@
       <div class="card-body">
         <div class="fw-semibold mb-2">标签</div>
         {% for t in doc.tag_list %}
-        <span class="tag-chip">{{ t }}</span>
+        <a class="tag-chip text-decoration-none" href="{{ url_for('knowledge.list_docs', q=t) }}">{{ t }}</a>
         {% endfor %}
       </div>
     </div>
     {% endif %}
     {% if related %}
     <div class="card panel">
-      <div class="card-header bg-white fw-semibold">相关文档</div>
+      <div class="card-header bg-transparent fw-semibold">相关文档</div>
       <ul class="list-group list-group-flush">
         {% for r in related %}
         <li class="list-group-item">

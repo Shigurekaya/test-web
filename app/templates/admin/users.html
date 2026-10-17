@@ -99,6 +99,9 @@
     document.getElementById('userFilterHint').textContent = '显示 ' + shown + ' / {{ users|length }}';
   }
   document.getElementById('userFilterBtn').addEventListener('click', apply);
+  document.getElementById('userFilterDept').addEventListener('change', apply);
+  document.getElementById('userFilterRole').addEventListener('change', apply);
+  document.getElementById('userFilterQ').addEventListener('input', apply);
   document.getElementById('userFilterReset').addEventListener('click', function () {
     document.getElementById('userFilterQ').value = '';
     document.getElementById('userFilterDept').value = '';

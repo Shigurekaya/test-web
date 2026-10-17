@@ -1,16 +1,30 @@
 {% extends "base.html" %}
 {% block title %}我的收藏{% endblock %}
 {% block content %}
-<h1 class="h3 page-title mb-3">我的收藏</h1>
+<div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 page-title mb-1">我的收藏</h1>
+    <div class="text-muted small">把常用制度钉在这里，下次不用再从长列表里翻。当前 {{ items|length }} 篇。</div>
+  </div>
+  <a class="btn btn-outline-primary btn-sm" href="{{ url_for('knowledge.list_docs') }}">去知识文档</a>
+</div>
+
 {% if items %}
 <div class="row g-3">
   {% for item in items %}
   <div class="col-md-6">
     <div class="card doc-card">
       <div class="card-body">
-        <a class="doc-title" href="{{ url_for('knowledge.detail', doc_id=item.document.id) }}">{{ item.document.title }}</a>
+        <div class="d-flex justify-content-between gap-2 mb-1">
+          <a class="doc-title" href="{{ url_for('knowledge.detail', doc_id=item.document.id) }}">{{ item.document.title }}</a>
+          <span class="badge text-bg-{{ item.document.visibility_badge }}">{{ item.document.visibility_label }}</span>
+        </div>
         <div class="doc-summary my-2">{{ item.document.summary or '暂无摘要' }}</div>
-        <div class="small text-muted">收藏于 {{ item.created_at|dt }} · {{ item.document.department }}</div>
+        <div class="small text-muted">
+          {{ item.document.category.name if item.document.category else '未分类' }}
+          · {{ item.document.department }}
+          · 收藏于 {{ item.created_at|dt }}
+        </div>
       </div>
     </div>
   </div>
@@ -19,8 +33,9 @@
 {% else %}
 <div class="card panel">
   <div class="empty-state">
+    <div class="empty-mark">藏</div>
     <div class="fw-semibold mb-1">还没有收藏</div>
-    <div class="small mb-3">在文档详情页点击「收藏」，方便下次快速打开</div>
+    <div class="small mb-3">打开任意一篇文档详情，点「收藏」，就会出现在本页。</div>
     <a class="btn btn-primary btn-sm" href="{{ url_for('knowledge.list_docs') }}">去浏览文档</a>
   </div>
 </div>

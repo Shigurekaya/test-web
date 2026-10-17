@@ -23,6 +23,13 @@ from app.utils import utcnow
 
 bp = Blueprint("main", __name__)
 
+QUICK_QUESTIONS = [
+    "员工年假有几天？",
+    "差旅住宿标准是多少？",
+    "加班怎么补偿？",
+    "采购超过两万元要找谁审批？",
+]
+
 
 @bp.route("/")
 def index():
@@ -46,18 +53,20 @@ def dashboard():
         .filter(QAHistory.created_at >= week_ago)
         .count()
     )
-    recent_docs = docs[:8]
+    recent_docs = docs[:6]
     recent_qa = (
         QAHistory.query.filter_by(user_id=current_user.id)
         .order_by(QAHistory.created_at.desc())
-        .limit(8)
+        .limit(6)
         .all()
     )
     recent_logs = []
     if current_user.is_admin:
-        recent_logs = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(12).all()
+        recent_logs = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(10).all()
     dept_counter = Counter(d.department for d in docs if d.department)
     dept_stats = sorted(dept_counter.items(), key=lambda x: (-x[1], x[0]))
+    cat_counter = Counter((d.category.name if d.category else "未分类") for d in docs)
+    cat_stats = sorted(cat_counter.items(), key=lambda x: (-x[1], x[0]))[:6]
     return render_template(
         "main/dashboard.html",
         doc_count=len(docs),
@@ -75,6 +84,8 @@ def dashboard():
         user_count=User.query.count(),
         audit_count=AuditLog.query.count(),
         dept_stats=dept_stats,
+        cat_stats=cat_stats,
+        quick_questions=QUICK_QUESTIONS,
     )
 
 

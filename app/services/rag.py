@@ -10,13 +10,13 @@ import jieba.analyse
 
 from app.extensions import db
 from app.models import Document, KnowledgeChunk, QAHistory
+from app.utils import auto_summary
 
 
 def chunk_text(text: str, chunk_size: int = 400, overlap: int = 50) -> list[str]:
     text = (text or "").strip()
     if not text:
         return []
-    # 优先按段落切
     paragraphs = [p.strip() for p in re.split(r"\n{2,}", text) if p.strip()]
     chunks: list[str] = []
     buf = ""
@@ -62,28 +62,42 @@ def rebuild_chunks_for_document(doc: Document, chunk_size: int = 400, overlap: i
 
 
 def _tokenize(text: str) -> set[str]:
-    return {t.strip() for t in jieba.lcut(text or "") if len(t.strip()) > 1}
+    return {t.strip().lower() for t in jieba.lcut(text or "") if len(t.strip()) > 1}
 
 
-def score_chunk(question_tokens: set[str], chunk: KnowledgeChunk) -> float:
-    content_tokens = _tokenize(chunk.content)
-    kw_tokens = {k for k in (chunk.keywords or "").split(",") if k}
-    if not question_tokens:
+def score_chunk(question: str, question_tokens: set[str], chunk: KnowledgeChunk) -> float:
+    """综合：词重叠 + 关键词加权 + 标题命中 + 短语包含。"""
+    if not question_tokens and not (question or "").strip():
         return 0.0
+
+    content = chunk.content or ""
+    content_l = content.lower()
+    content_tokens = _tokenize(content)
+    kw_tokens = {k.strip().lower() for k in (chunk.keywords or "").split(",") if k.strip()}
+    title = chunk.document.title if chunk.document else ""
+    title_tokens = _tokenize(title)
+    q = (question or "").strip().lower()
+
     content_hit = len(question_tokens & content_tokens)
     kw_hit = len(question_tokens & kw_tokens)
-    # 关键词命中加权
-    return content_hit + kw_hit * 1.5
+    title_hit = len(question_tokens & title_tokens)
+    coverage = (content_hit / len(question_tokens)) if question_tokens else 0.0
 
+    score = content_hit * 1.0 + kw_hit * 1.8 + title_hit * 3.2 + coverage * 2.0
 
-def searchable_documents(user) -> list[Document]:
-    q = Document.query.filter_by(status="published")
-    docs = q.order_by(Document.updated_at.desc()).all()
-    result = []
-    for doc in docs:
-        if can_view_document(user, doc):
-            result.append(doc)
-    return result
+    if q:
+        if q in content_l:
+            score += 10.0
+        elif len(q) >= 4 and q[: max(4, len(q) // 2)] in content_l:
+            score += 4.0
+        if q in (title or "").lower():
+            score += 6.0
+        # 去掉疑问助词后的短句再匹配一次
+        q_core = re.sub(r"[吗呢啊呀？?]+$", "", q).strip()
+        if q_core and q_core != q and q_core in content_l:
+            score += 5.0
+
+    return score
 
 
 def can_view_document(user, doc: Document) -> bool:
@@ -98,20 +112,98 @@ def can_view_document(user, doc: Document) -> bool:
     return True  # public
 
 
+def searchable_documents(user) -> list[Document]:
+    docs = Document.query.filter_by(status="published").order_by(Document.updated_at.desc()).all()
+    return [doc for doc in docs if can_view_document(user, doc)]
+
+
+def rank_documents(docs: list[Document], q: str) -> list[Document]:
+    """列表页关键词排序：标题 / 标签优先，其次摘要与正文。"""
+    ql = (q or "").strip().lower()
+    if not ql:
+        return docs
+
+    q_tokens = _tokenize(ql)
+    scored: list[tuple[float, Document]] = []
+    for d in docs:
+        title = (d.title or "").lower()
+        summary = (d.summary or "").lower()
+        tags = (d.tags or "").lower()
+        content = (d.content or "").lower()
+        score = 0.0
+        if ql in title:
+            score += 20
+        if ql in tags:
+            score += 12
+        if ql in summary:
+            score += 8
+        if ql in content:
+            score += 4
+        if q_tokens:
+            score += 3 * len(q_tokens & _tokenize(d.title or ""))
+            score += 2 * len(q_tokens & _tokenize(d.tags or ""))
+            score += 1 * len(q_tokens & _tokenize(d.summary or ""))
+        if score > 0:
+            scored.append((score, d))
+    scored.sort(
+        key=lambda x: (
+            -x[0],
+            -(x[1].updated_at.timestamp() if x[1].updated_at else 0),
+        )
+    )
+    return [d for _, d in scored]
+
+
+def related_documents(doc: Document, user, limit: int = 4) -> list[Document]:
+    """按同分类 / 标签重叠 / 同部门挑选相关文档。"""
+    base_tags = set(doc.tag_list)
+    candidates = (
+        Document.query.filter(
+            Document.id != doc.id,
+            Document.status == "published",
+        )
+        .order_by(Document.updated_at.desc())
+        .limit(40)
+        .all()
+    )
+    scored: list[tuple[float, Document]] = []
+    for c in candidates:
+        if not can_view_document(user, c):
+            continue
+        score = 0.0
+        if doc.category_id and c.category_id == doc.category_id:
+            score += 5
+        if c.department == doc.department:
+            score += 2
+        overlap = len(base_tags & set(c.tag_list))
+        score += overlap * 3
+        if score > 0:
+            scored.append((score, c))
+    scored.sort(key=lambda x: (-x[0], -(x[1].updated_at.timestamp() if x[1].updated_at else 0)))
+    return [c for _, c in scored[:limit]]
+
+
 def retrieve(question: str, user, top_k: int = 5) -> list[dict[str, Any]]:
     allowed_ids = {d.id for d in searchable_documents(user)}
     if not allowed_ids:
         return []
     q_tokens = _tokenize(question)
     chunks = KnowledgeChunk.query.filter(KnowledgeChunk.document_id.in_(allowed_ids)).all()
-    scored = []
+    scored: list[tuple[float, KnowledgeChunk]] = []
     for ch in chunks:
-        s = score_chunk(q_tokens, ch)
+        s = score_chunk(question, q_tokens, ch)
         if s > 0:
             scored.append((s, ch))
     scored.sort(key=lambda x: x[0], reverse=True)
-    results = []
-    for s, ch in scored[:top_k]:
+
+    # 同文档最多取 2 条，保证来源多样性
+    results: list[dict[str, Any]] = []
+    per_doc: dict[int, int] = {}
+    for s, ch in scored:
+        count = per_doc.get(ch.document_id, 0)
+        if count >= 2:
+            continue
+        per_doc[ch.document_id] = count + 1
         results.append(
             {
                 "score": round(s, 2),
@@ -122,6 +214,8 @@ def retrieve(question: str, user, top_k: int = 5) -> list[dict[str, Any]]:
                 "department": ch.document.department if ch.document else "",
             }
         )
+        if len(results) >= top_k:
+            break
     return results
 
 
@@ -136,11 +230,11 @@ def build_local_answer(question: str, hits: list[dict[str, Any]]) -> str:
         "",
     ]
     for i, h in enumerate(hits, 1):
-        snippet = h["content"].strip().replace("\n", " ")
-        if len(snippet) > 220:
-            snippet = snippet[:220] + "…"
+        snippet = auto_summary(h["content"].strip().replace("\n", " "), limit=220)
         lines.append(f"{i}. 【{h['title']}】{snippet}")
-        lines.append(f"   （来源文档 #{h['document_id']}，相关部门：{h['department']}，相关度 {h['score']}）")
+        lines.append(
+            f"   （来源文档 #{h['document_id']}，相关部门：{h['department']}，相关度 {h['score']}）"
+        )
         lines.append("")
     lines.append("说明：当前为本地检索摘要模式。配置 OPENAI_API_KEY 后可启用大模型生成式回答。")
     return "\n".join(lines)
@@ -159,9 +253,7 @@ def call_llm_answer(question: str, hits: list[dict[str, Any]], config) -> str | 
     try:
         from urllib import request
 
-        context = "\n\n".join(
-            f"[文档:{h['title']}]\n{h['content']}" for h in hits
-        )
+        context = "\n\n".join(f"[文档:{h['title']}]\n{h['content']}" for h in hits)
         payload = {
             "model": _cfg(config, "OPENAI_MODEL", "gpt-4o-mini"),
             "messages": [

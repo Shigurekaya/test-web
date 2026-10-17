@@ -15,69 +15,76 @@
   <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('graph.view') }}">对照关系图</a>
 </div>
 
-<div class="card panel mb-3">
-  <div class="card-body">
-    <form method="post">
-      <label class="form-label fw-semibold">输入业务问题</label>
-      <textarea class="form-control mb-3" name="question" rows="3" required placeholder="尽量带上业务词，例如：年假天数、差旅住宿、采购两万元审批">{{ question }}</textarea>
-      <div class="mb-3">
-        <div class="small text-muted mb-1">可点选示例（会填入输入框并查询）：</div>
-        {% for s in suggestions %}
-        <a class="suggest-chip" href="{{ url_for('qa.ask_page', q=s) }}">{{ s }}</a>
-        {% endfor %}
-      </div>
-      <button class="btn btn-primary" type="submit">检索并回答</button>
-    </form>
-  </div>
-</div>
-
-{% if result %}
-<div class="card panel mb-3">
-  <div class="card-header bg-white d-flex justify-content-between align-items-center">
-    <span class="fw-semibold">回答</span>
-    <span class="badge text-bg-{{ 'success' if result.mode=='llm' else 'secondary' }}">{{ result.mode|mode_label }}</span>
-  </div>
-  <div class="card-body">
-    <div class="answer-box">{{ result.answer }}</div>
-  </div>
-</div>
-
-{% if result.hits %}
-<h2 class="h6 text-muted mb-2">检索依据（按相关度，共 {{ result.hits|length }} 条）</h2>
-<div class="row g-3 mb-4">
-  {% for h in result.hits %}
-  <div class="col-md-6">
-    <div class="card hit-card h-100">
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card panel mb-3">
       <div class="card-body">
-        <div class="fw-semibold mb-1">
-          <a href="{{ url_for('knowledge.detail', doc_id=h.document_id) }}">{{ h.title }}</a>
-          <span class="badge text-bg-light">相关度 {{ h.score }}</span>
-        </div>
-        <div class="small text-muted mb-1">{{ h.department }}</div>
-        <div class="small" style="white-space: pre-wrap;">{{ h.content[:280] }}{% if h.content|length > 280 %}…{% endif %}</div>
+        <form method="post">
+          <label class="form-label fw-semibold">输入业务问题</label>
+          <textarea class="form-control mb-3" name="question" rows="3" required placeholder="尽量带上业务词，例如：年假天数、差旅住宿、采购两万元审批">{{ question }}</textarea>
+          <div class="mb-3">
+            <div class="small text-muted mb-1">可点选示例（会直接提问）：</div>
+            {% for s in suggestions %}
+            <button class="suggest-chip" type="submit" name="question" value="{{ s }}">{{ s }}</button>
+            {% endfor %}
+          </div>
+          <button class="btn btn-primary" type="submit">检索并回答</button>
+        </form>
       </div>
     </div>
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
-{% endif %}
 
-<div class="card panel">
-  <div class="card-header bg-white fw-semibold">最近提问</div>
-  {% if history %}
-  <ul class="list-group list-group-flush">
-    {% for h in history %}
-    <li class="list-group-item">
-      <a href="{{ url_for('qa.history_detail', hid=h.id) }}">{{ h.question }}</a>
-      <div class="small text-muted">{{ h.mode|mode_label }} · {{ h.created_at|dt }}</div>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <div class="empty-state py-4">
-    <div class="small">还没有提问记录。可从上方示例点一条试试。</div>
+    {% if result %}
+    <div class="card panel mb-3">
+      <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">回答</span>
+        <span class="badge text-bg-{{ 'success' if result.mode=='llm' else 'secondary' }}">{{ result.mode|mode_label }}</span>
+      </div>
+      <div class="card-body">
+        <div class="answer-box">{{ result.answer }}</div>
+      </div>
+    </div>
+
+    {% if result.hits %}
+    <h2 class="h6 text-muted mb-2">检索依据（按相关度，共 {{ result.hits|length }} 条）</h2>
+    <div class="row g-3 mb-2">
+      {% for h in result.hits %}
+      <div class="col-md-6">
+        <div class="card panel hit-card h-100">
+          <div class="card-body">
+            <div class="fw-semibold mb-1">
+              <a href="{{ url_for('knowledge.detail', doc_id=h.document_id) }}">{{ h.title }}</a>
+            </div>
+            <div class="small text-muted mb-1">{{ h.department }} · 相关度 {{ h.score }}</div>
+            <div class="score-bar"><span style="width: {{ [h.score * 8, 100]|min }}%"></span></div>
+            <div class="small mt-2" style="white-space: pre-wrap;">{{ h.content[:280] }}{% if h.content|length > 280 %}…{% endif %}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endif %}
   </div>
-  {% endif %}
+
+  <div class="col-lg-4">
+    <div class="card panel">
+      <div class="card-header bg-transparent fw-semibold">最近提问</div>
+      {% if history %}
+      <ul class="list-group list-group-flush">
+        {% for h in history %}
+        <li class="list-group-item">
+          <a href="{{ url_for('qa.history_detail', hid=h.id) }}">{{ h.question }}</a>
+          <div class="small text-muted">{{ h.mode|mode_label }} · {{ h.created_at|dt }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <div class="empty-state py-4">
+        <div class="empty-mark">问</div>
+        <div class="small">还没有提问记录。可从左侧示例点一条试试。</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 {% endblock %}

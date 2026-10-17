@@ -4,21 +4,9 @@ from flask import Blueprint, render_template
 from flask_login import login_required
 
 from app.models import AuditLog, Document, User
-from app.utils import ACTION_LABELS, admin_required
+from app.utils import ACTION_LABELS, DEPARTMENTS, admin_required
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
-
-DEPARTMENTS = [
-    "综合部",
-    "人事部",
-    "财务部",
-    "信息部",
-    "产品部",
-    "运营部",
-    "市场部",
-    "法务部",
-    "技术部",
-]
 
 
 @bp.route("/users")

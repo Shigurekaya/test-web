@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 
 from app.extensions import db
 from app.models import AuditLog, User
-from app.utils import safe_next_url
+from app.utils import DEMO_ACCOUNTS, safe_next_url
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -30,7 +30,7 @@ def login():
             )
             return redirect(next_url)
         flash("用户名或密码错误", "danger")
-    return render_template("auth/login.html")
+    return render_template("auth/login.html", demo_accounts=DEMO_ACCOUNTS)
 
 
 @bp.route("/logout")

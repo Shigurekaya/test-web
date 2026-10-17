@@ -3,7 +3,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 
 from app.extensions import db
 from app.models import AuditLog, User
-from app.utils import DEMO_ACCOUNTS, RateLimiter, safe_next_url
+from app.utils import DEMO_ACCOUNTS, RateLimiter, audit_detail, safe_next_url
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -46,7 +46,7 @@ def login():
             login_limiter.clear_from_request()
             login_user(user)
             db.session.add(
-                AuditLog(user_id=user.id, action="login", detail=f"用户 {username} 登录")
+                AuditLog(user_id=user.id, action="login", detail=audit_detail("login", username=username))
             )
             db.session.commit()
             flash("登录成功", "success")
@@ -62,7 +62,7 @@ def login():
             AuditLog(
                 user_id=user.id if user else None,
                 action="login_failed",
-                detail=f"登录失败：{username or '(空用户名)'}",
+                detail=audit_detail("login_failed", username=username or None),
             )
         )
         db.session.commit()
@@ -78,7 +78,7 @@ def logout():
         AuditLog(
             user_id=current_user.id,
             action="logout",
-            detail=f"用户 {current_user.username} 退出",
+            detail=audit_detail("logout", username=current_user.username),
         )
     )
     db.session.commit()

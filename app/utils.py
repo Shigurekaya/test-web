@@ -208,6 +208,45 @@ class RateLimiter:
         return self.retry_after(self._key_from_request())
 
 
+def audit_detail(action: str, **parts) -> str:
+    """统一审计明细文案。
+
+    各处自己拼字符串时格式会漂移（有的带文档编号、有的带标题、有的都不带），
+    审计页读起来就前后不一致。这里集中拼装：
+      - 文档类动作：查看文档 #17 《标题》
+      - 问答：提问：<问题摘要>
+      - 账户：用户 xxx 登录 / 退出、登录失败：xxx
+    """
+    phrase = ACTION_PHRASES.get(action, action)
+    doc_id = parts.get("doc_id")
+    title = parts.get("title")
+    if doc_id is not None:
+        return f"{phrase} #{doc_id}" + (f" 《{title}》" if title else "")
+    if "question" in parts:
+        q = (parts["question"] or "").strip()
+        return f"提问：{q[:80]}" + ("…" if len(q) > 80 else "")
+    if "username" in parts:
+        who = parts["username"] or "(空用户名)"
+        if action == "login_failed":
+            return f"登录失败：{who}"
+        if action == "logout":
+            return f"用户 {who} 退出"
+        return f"用户 {who} 登录"
+    return action
+
+
+ACTION_PHRASES = {
+    "view_document": "查看文档",
+    "create_document": "创建文档",
+    "edit_document": "编辑文档",
+    "delete_document": "删除文档",
+    "login": "登录",
+    "logout": "退出",
+    "login_failed": "登录失败",
+    "ask_qa": "提问",
+}
+
+
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):

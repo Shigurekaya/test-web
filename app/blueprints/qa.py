@@ -6,6 +6,7 @@ from flask_login import current_user, login_required
 from app.extensions import db
 from app.models import AuditLog, QAHistory
 from app.services.rag import ask, group_hits_by_document
+from app.utils import audit_detail
 
 bp = Blueprint("qa", __name__, url_prefix="/qa")
 
@@ -39,7 +40,7 @@ def ask_page():
                 AuditLog(
                     user_id=current_user.id,
                     action="ask_qa",
-                    detail=f"提问：{question[:80]}",
+                    detail=audit_detail("ask_qa", question=question),
                 )
             )
             db.session.commit()

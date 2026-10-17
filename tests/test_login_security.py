@@ -181,3 +181,50 @@ class TestPasswordStorage:
             assert user.password_hash.startswith(("scrypt:", "pbkdf2:"))
             assert user.check_password("admin123") is True
             assert user.check_password("admin1234") is False
+
+class TestAuditDetailFormat:
+    """审计明细统一由 audit_detail 拼装，避免各处格式漂移。"""
+
+    def test_document_actions_include_id_and_title(self):
+        from app.utils import audit_detail
+
+        assert audit_detail("view_document", doc_id=17, title="年假办法") == "查看文档 #17 《年假办法》"
+        assert audit_detail("edit_document", doc_id=3) == "编辑文档 #3"
+
+    def test_question_is_truncated(self):
+        from app.utils import audit_detail
+
+        long_q = "长" * 120
+        out = audit_detail("ask_qa", question=long_q)
+        assert out.startswith("提问：")
+        assert len(out) < 90
+        assert out.endswith("…")
+
+    def test_short_question_has_no_ellipsis(self):
+        from app.utils import audit_detail
+
+        assert audit_detail("ask_qa", question="年假几天") == "提问：年假几天"
+
+    def test_account_actions(self):
+        from app.utils import audit_detail
+
+        assert audit_detail("login", username="admin") == "用户 admin 登录"
+        assert audit_detail("logout", username="admin") == "用户 admin 退出"
+        assert audit_detail("login_failed", username="ghost") == "登录失败：ghost"
+        assert audit_detail("login_failed", username=None) == "登录失败：(空用户名)"
+
+    def test_blueprints_and_seed_share_the_format(self, client, app):
+        """运行时写入与种子数据的文案格式必须一致，审计页读起来才统一。"""
+        import re
+
+        from app.models import AuditLog
+
+        client.post("/auth/login", data={"username": "admin", "password": "admin123"})
+        client.post("/auth/login", data={"username": "admin", "password": "bad"})
+
+        with app.app_context():
+            failed = AuditLog.query.filter_by(action="login_failed").all()
+            ok = AuditLog.query.filter_by(action="login").all()
+            assert failed and ok
+            assert re.fullmatch(r"登录失败：\S+", failed[-1].detail)
+            assert re.fullmatch(r"用户 \S+ 登录", ok[-1].detail)

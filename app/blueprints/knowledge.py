@@ -18,6 +18,7 @@ from app.utils import (
     STATUS_LABELS,
     VISIBILITY_LABELS,
     admin_required,
+    audit_detail,
     auto_summary,
     normalize_choice,
     now_naive,
@@ -138,7 +139,7 @@ def detail(doc_id: int):
             AuditLog(
                 user_id=current_user.id,
                 action="view_document",
-                detail=f"查看文档 #{doc.id} {doc.title}",
+                detail=audit_detail("view_document", doc_id=doc.id, title=doc.title),
             )
         )
         db.session.commit()
@@ -180,7 +181,7 @@ def create():
         )
         sync_document_graph(doc)
         db.session.add(
-            AuditLog(user_id=current_user.id, action="create_document", detail=f"创建文档 #{doc.id}")
+            AuditLog(user_id=current_user.id, action="create_document", detail=audit_detail("create_document", doc_id=doc.id, title=doc.title))
         )
         db.session.commit()
         flash("文档已创建，并完成知识切分与图谱同步", "success")
@@ -224,7 +225,7 @@ def edit(doc_id: int):
         )
         sync_document_graph(doc)
         db.session.add(
-            AuditLog(user_id=current_user.id, action="edit_document", detail=f"编辑文档 #{doc.id}")
+            AuditLog(user_id=current_user.id, action="edit_document", detail=audit_detail("edit_document", doc_id=doc.id, title=doc.title))
         )
         db.session.commit()
         flash("文档已更新", "success")
@@ -249,7 +250,7 @@ def delete(doc_id: int):
     remove_document_graph(doc)
     db.session.delete(doc)
     db.session.add(
-        AuditLog(user_id=current_user.id, action="delete_document", detail=f"删除文档 {title}")
+        AuditLog(user_id=current_user.id, action="delete_document", detail=audit_detail("delete_document", doc_id=doc.id, title=title))
     )
     db.session.commit()
     flash("文档已删除", "info")

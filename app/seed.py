@@ -18,6 +18,7 @@ from app.models import (
 )
 from app.services.graph import ensure_edge, get_or_create_node, sync_document_graph
 from app.services.rag import rebuild_chunks_for_document
+from app.utils import audit_detail
 
 DEMO_DOCS = [
     {
@@ -1068,26 +1069,19 @@ def _seed_activity(admin: User, app):
 
     # 审计日志：若偏少则批量补齐多样化动作
     if AuditLog.query.count() < 120:
-        actions = [
-            ("login", "登录系统"),
-            ("logout", "退出系统"),
-            ("view_document", None),
-            ("create_document", None),
-            ("edit_document", None),
-            ("ask_qa", None),
-        ]
+        # 明细统一走 audit_detail，与蓝图实时写入的格式保持一致；
+        # 此前这里硬写了「登录系统」/「退出系统」，审计页上同一类动作两种写法。
+        actions = ["login", "logout", "view_document", "create_document", "edit_document", "ask_qa"]
         for i in range(160):
             u = users[i % len(users)]
-            action, detail = actions[i % len(actions)]
+            action = actions[i % len(actions)]
             doc = docs[i % len(docs)]
-            if action == "view_document":
-                detail = f"查看文档 #{doc.id} {doc.title}"
-            elif action == "create_document":
-                detail = f"创建文档 #{doc.id} {doc.title}"
-            elif action == "edit_document":
-                detail = f"编辑文档 #{doc.id} {doc.title}"
+            if action in ("view_document", "create_document", "edit_document"):
+                detail = audit_detail(action, doc_id=doc.id, title=doc.title)
             elif action == "ask_qa":
-                detail = f"提问：{DEMO_QA[i % len(DEMO_QA)][0]}"
+                detail = audit_detail("ask_qa", question=DEMO_QA[i % len(DEMO_QA)][0])
+            else:
+                detail = audit_detail(action, username=u.username)
             created = base + timedelta(days=rng.randint(0, 27), hours=rng.randint(0, 23), minutes=rng.randint(0, 59))
             db.session.add(
                 AuditLog(

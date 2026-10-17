@@ -9,6 +9,7 @@ from app.services.rag import (
     can_view_document,
     chunk_text,
     extract_keywords,
+    group_hits_by_document,
     rebuild_chunks_for_document,
     retrieve,
     score_chunk,
@@ -338,3 +339,82 @@ class TestAnonymousUser:
         anon = type("U", (), {"is_admin": False, "department": None, "id": None})()
         assert can_view_document(anon, doc) is True  # public 对登录用户开放
         assert can_view_document(None, doc) is False
+
+class TestGroupHitsByDocument:
+    """检索依据按文档合并，避免同一篇文档渲染成多张重复卡片。"""
+
+    @staticmethod
+    def _hit(doc_id, title, score, content, no=1, total=1):
+        return {
+            "score": score,
+            "chunk_id": doc_id * 10 + no,
+            "document_id": doc_id,
+            "title": title,
+            "content": content,
+            "department": "人事部",
+            "fragment_no": no,
+            "fragment_total": total,
+        }
+
+    def test_same_document_merges_into_one_group(self):
+        hits = [
+            self._hit(1, "员工年休假管理办法", 6.5, "年假五天。", no=1, total=2),
+            self._hit(1, "员工年休假管理办法", 6.5, "年假申请流程。", no=2, total=2),
+        ]
+        groups = group_hits_by_document(hits)
+        assert len(groups) == 1
+        assert len(groups[0]["fragments"]) == 2
+
+    def test_groups_sorted_by_highest_score(self):
+        hits = [
+            self._hit(2, "制度 B", 3.0, "bbb"),
+            self._hit(1, "制度 A", 9.0, "aaa"),
+            self._hit(3, "制度 C", 5.0, "ccc"),
+        ]
+        groups = group_hits_by_document(hits)
+        assert [g["document_id"] for g in groups] == [1, 3, 2]
+
+    def test_group_score_is_best_fragment_score(self):
+        hits = [
+            self._hit(1, "制度 A", 4.0, "aaa", no=1, total=2),
+            self._hit(1, "制度 A", 7.5, "aaa again", no=2, total=2),
+        ]
+        groups = group_hits_by_document(hits)
+        assert groups[0]["score"] == 7.5
+
+    def test_empty_input(self):
+        assert group_hits_by_document([]) == []
+
+    def test_fragment_metadata_is_preserved(self):
+        hits = [
+            self._hit(1, "A", 5.0, "x", no=1, total=3),
+            self._hit(1, "A", 4.0, "y", no=2, total=3),
+        ]
+        groups = group_hits_by_document(hits)
+        assert [f["fragment_no"] for f in groups[0]["fragments"]] == [1, 2]
+        assert groups[0]["fragments"][0]["fragment_total"] == 3
+
+
+class TestRetrieveFragmentMetadata:
+    def test_hits_carry_fragment_indices(self, app):
+        from app.extensions import db
+        from app.models import Document
+        from app.services.rag import rebuild_chunks_for_document
+
+        doc = Document(
+            title="长篇年假制度",
+            content=("年假条款\n\n" * 80) + "年假天数正文说明。\n\n" + ("年假补充\n\n" * 80),
+            department="人事部",
+            visibility="internal",
+            status="published",
+        )
+        db.session.add(doc)
+        db.session.flush()
+        rebuild_chunks_for_document(doc, chunk_size=200, overlap=20)
+
+        user = type("U", (), {"is_admin": False, "department": "人事部", "id": 9})()
+        hits = retrieve("年假", user, top_k=5)
+        assert hits
+        for hit in hits:
+            assert hit["fragment_no"] >= 1
+            assert hit["fragment_total"] >= hit["fragment_no"]

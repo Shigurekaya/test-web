@@ -251,7 +251,9 @@ def retrieve(question: str, user, top_k: int = 5) -> list[dict[str, Any]]:
             scored.append((s, ch))
     scored.sort(key=lambda x: x[0], reverse=True)
 
-    # 同文档最多取 2 条，保证来源多样性
+    # 同一篇文档最多贡献 2 个片段：既保证来源多样，又允许长文从两处佐证。
+    # 额外给每个片段标注它在所属文档内的序号，供界面合并展示，避免同一篇
+    # 文档被渲染成两张内容几乎一样的卡片。
     results: list[dict[str, Any]] = []
     per_doc: dict[int, int] = {}
     for s, ch in scored:
@@ -267,11 +269,40 @@ def retrieve(question: str, user, top_k: int = 5) -> list[dict[str, Any]]:
                 "title": ch.document.title if ch.document else "",
                 "content": ch.content,
                 "department": ch.document.department if ch.document else "",
+                "fragment_no": count + 1,
+                "fragment_total": 0,  # 下面回填
             }
         )
         if len(results) >= top_k:
             break
+
+    for item in results:
+        item["fragment_total"] = per_doc[item["document_id"]]
     return results
+
+
+def group_hits_by_document(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """把命中片段按文档合并，供「检索依据」按文档展示。
+
+    返回的每项：document_id / title / department / score（取该文档最高分）/
+    fragments（该文档的片段列表）。
+    """
+    grouped: dict[int, dict[str, Any]] = {}
+    for hit in hits:
+        bucket = grouped.get(hit["document_id"])
+        if bucket is None:
+            bucket = {
+                "document_id": hit["document_id"],
+                "title": hit["title"],
+                "department": hit["department"],
+                "score": hit["score"],
+                "fragments": [],
+            }
+            grouped[hit["document_id"]] = bucket
+        else:
+            bucket["score"] = max(bucket["score"], hit["score"])
+        bucket["fragments"].append(hit)
+    return sorted(grouped.values(), key=lambda g: g["score"], reverse=True)
 
 
 def build_local_answer(question: str, hits: list[dict[str, Any]]) -> str:

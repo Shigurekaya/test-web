@@ -1,6 +1,6 @@
 import math
 import time
-from datetime import UTC, datetime
+from datetime import datetime
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -91,8 +91,15 @@ DEMO_ACCOUNTS = (
 )
 
 
-def utcnow() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=None)
+def now_naive() -> datetime:
+    """当前时间（不带时区的 naive datetime，直接落库用）。
+
+    口径统一为**本地时间**，与 seed 里写死的演示数据、以及界面上展示的
+    「年月日时分秒」保持一致。此前这里返回的是 UTC，而种子数据按本地时间写，
+    于是同一套界面里新记录比历史记录早 8 小时（Asia/Shanghai），
+    审计日志的顺序看起来是错乱的。
+    """
+    return datetime.now()
 
 
 def format_dt(value, fmt: str = "%Y-%m-%d %H:%M:%S") -> str:

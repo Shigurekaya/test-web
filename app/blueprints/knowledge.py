@@ -20,7 +20,7 @@ from app.utils import (
     admin_required,
     auto_summary,
     normalize_choice,
-    utcnow,
+    now_naive,
 )
 
 bp = Blueprint("knowledge", __name__, url_prefix="/knowledge")
@@ -83,7 +83,7 @@ def list_docs():
     elif sort == "department":
         docs = sorted(docs, key=lambda d: (d.department or "", -(d.updated_at.timestamp() if d.updated_at else 0)))
     else:
-        docs = sorted(docs, key=lambda d: d.updated_at or utcnow(), reverse=True)
+        docs = sorted(docs, key=lambda d: d.updated_at or now_naive(), reverse=True)
 
     total = len(docs)
     pages = max((total + per_page - 1) // per_page, 1)
@@ -127,7 +127,7 @@ def detail(doc_id: int):
     # 同一用户 2 分钟内重复打开不刷审计
     recent = (
         AuditLog.query.filter_by(user_id=current_user.id, action="view_document")
-        .filter(AuditLog.created_at >= utcnow() - timedelta(minutes=2))
+        .filter(AuditLog.created_at >= now_naive() - timedelta(minutes=2))
         .order_by(AuditLog.created_at.desc())
         .limit(5)
         .all()

@@ -5,7 +5,7 @@ from flask_login import current_user, login_required
 
 from app.extensions import db
 from app.models import AuditLog, QAHistory
-from app.services.rag import ask
+from app.services.rag import ask, group_hits_by_document
 
 bp = Blueprint("qa", __name__, url_prefix="/qa")
 
@@ -55,6 +55,7 @@ def ask_page():
     return render_template(
         "qa/ask.html",
         result=result,
+        result_sources=group_hits_by_document(result["hits"]) if result else [],
         question=question,
         history=history,
         llm_enabled=bool(current_app.config.get("OPENAI_API_KEY")),

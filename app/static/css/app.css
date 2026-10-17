@@ -537,3 +537,19 @@ a:hover { color: var(--brand-soft); }
   .login-hero { padding: 1.5rem; }
   .login-form-pane { padding: 1.5rem; }
 }
+
+/* 问答页：按文档合并后的「检索依据」卡片 */
+.hit-card .fragment {
+  border-left: 3px solid rgba(37, 99, 235, 0.22);
+  padding-left: 0.7rem;
+}
+
+.hit-card .fragment + .fragment {
+  border-top: 1px dashed rgba(15, 36, 56, 0.1);
+  padding-top: 0.7rem;
+}
+
+/* 深色环境下保持对比度 */
+[data-bs-theme="dark"] .hit-card .fragment {
+  border-left-color: rgba(120, 170, 255, 0.45);
+}

@@ -189,3 +189,31 @@ def test_20_demo_storyline_smoke(fresh_client):
         "/qa/", data={"question": "员工年假有几天？"}, follow_redirects=True
     ).status_code == 200
 
+class TestTimestampConsistency:
+    """新写入的记录与演示历史必须同一时间口径，否则界面顺序看起来是乱的。
+
+    此前 now_naive()（当时叫 utcnow）返回 UTC，而种子数据按本地时间写，
+    于是同一页里新记录比历史记录早 8 小时（Asia/Shanghai）。
+    """
+
+    def test_now_naive_matches_system_clock(self):
+        from app.utils import now_naive
+
+        delta = abs((now_naive() - datetime.now()).total_seconds())
+        assert delta < 5, f"now_naive 与系统时间相差 {delta:.0f} 秒，口径可能不一致"
+
+    def test_new_audit_row_is_newer_than_seeded_rows(self, client, app):
+        from app.models import AuditLog
+
+        client.post("/auth/login", data={"username": "admin", "password": "admin123"})
+        newest = AuditLog.query.order_by(AuditLog.created_at.desc()).first()
+        assert newest is not None
+        # 种子数据止于 2026-09-29，刚写入的记录不应早于它
+        assert newest.created_at >= datetime(2026, 10, 1)
+
+    def test_audit_rows_render_chronologically(self, admin_client, app):
+        from app.models import AuditLog
+
+        rows = AuditLog.query.order_by(AuditLog.created_at.desc()).limit(30).all()
+        stamps = [r.created_at for r in rows]
+        assert stamps == sorted(stamps, reverse=True)

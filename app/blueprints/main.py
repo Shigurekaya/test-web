@@ -19,7 +19,7 @@ from app.models import (
     User,
 )
 from app.services.rag import searchable_documents
-from app.utils import utcnow
+from app.utils import now_naive
 
 bp = Blueprint("main", __name__)
 
@@ -47,7 +47,7 @@ def dashboard():
     docs = searchable_documents(current_user)
     fav_count = Favorite.query.filter_by(user_id=current_user.id).count()
     qa_count = QAHistory.query.filter_by(user_id=current_user.id).count()
-    week_ago = utcnow() - timedelta(days=7)
+    week_ago = now_naive() - timedelta(days=7)
     qa_week = (
         QAHistory.query.filter_by(user_id=current_user.id)
         .filter(QAHistory.created_at >= week_ago)

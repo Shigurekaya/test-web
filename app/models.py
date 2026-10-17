@@ -10,7 +10,7 @@ from app.utils import (
     VISIBILITY_BADGE,
     VISIBILITY_LABELS,
     label_of,
-    utcnow,
+    now_naive,
 )
 
 
@@ -23,7 +23,7 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(64), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="employee")
     department = db.Column(db.String(64), nullable=False, default="综合部")
-    created_at = db.Column(db.DateTime, default=utcnow)
+    created_at = db.Column(db.DateTime, default=now_naive)
 
     documents = db.relationship("Document", back_populates="author", lazy="dynamic")
     favorites = db.relationship("Favorite", back_populates="user", lazy="dynamic")
@@ -69,8 +69,8 @@ class Document(db.Model):
     tags = db.Column(db.String(255), default="")
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"))
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    created_at = db.Column(db.DateTime, default=utcnow)
-    updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow)
+    created_at = db.Column(db.DateTime, default=now_naive)
+    updated_at = db.Column(db.DateTime, default=now_naive, onupdate=now_naive)
 
     category = db.relationship("Category", back_populates="documents")
     author = db.relationship("User", back_populates="documents")
@@ -159,7 +159,7 @@ class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     document_id = db.Column(db.Integer, db.ForeignKey("documents.id"), nullable=False)
-    created_at = db.Column(db.DateTime, default=utcnow)
+    created_at = db.Column(db.DateTime, default=now_naive)
 
     user = db.relationship("User", back_populates="favorites")
     document = db.relationship("Document", back_populates="favorites")
@@ -174,7 +174,7 @@ class AuditLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
     action = db.Column(db.String(64), nullable=False)
     detail = db.Column(db.String(500), default="")
-    created_at = db.Column(db.DateTime, default=utcnow)
+    created_at = db.Column(db.DateTime, default=now_naive)
 
     user = db.relationship("User", back_populates="audit_logs")
 
@@ -188,7 +188,7 @@ class QAHistory(db.Model):
     answer = db.Column(db.Text, nullable=False)
     sources = db.Column(db.Text, default="")
     mode = db.Column(db.String(20), default="local")
-    created_at = db.Column(db.DateTime, default=utcnow)
+    created_at = db.Column(db.DateTime, default=now_naive)
 
     @property
     def mode_label(self) -> str:

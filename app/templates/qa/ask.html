@@ -44,19 +44,34 @@
       </div>
     </div>
 
-    {% if result.hits %}
-    <h2 class="h6 text-muted mb-2">检索依据（按相关度，共 {{ result.hits|length }} 条）</h2>
+    {% if result_sources %}
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h6 text-muted mb-0">检索依据（按相关度，{{ result_sources|length }} 篇文档 / {{ result.hits|length }} 个片段）</h2>
+    </div>
     <div class="row g-3 mb-2">
-      {% for h in result.hits %}
-      <div class="col-md-6">
+      {% for g in result_sources %}
+      <div class="col-lg-6">
         <div class="card panel hit-card h-100">
           <div class="card-body">
-            <div class="fw-semibold mb-1">
-              <a href="{{ url_for('knowledge.detail', doc_id=h.document_id) }}">{{ h.title }}</a>
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div class="fw-semibold">
+                <a href="{{ url_for('knowledge.detail', doc_id=g.document_id) }}">{{ g.title }}</a>
+              </div>
+              <span class="badge text-bg-light text-dark align-middle">相关度 {{ g.score }}</span>
             </div>
-            <div class="small text-muted mb-1">{{ h.department }} · 相关度 {{ h.score }}</div>
-            <div class="score-bar"><span style="width: {{ [h.score * 8, 100]|min }}%"></span></div>
-            <div class="small mt-2" style="white-space: pre-wrap;">{{ h.content[:280] }}{% if h.content|length > 280 %}…{% endif %}</div>
+            <div class="small text-muted mb-2">
+              {{ g.department }}
+              {% if g.fragments|length > 1 %}· 命中 {{ g.fragments|length }} 个片段{% endif %}
+            </div>
+            <div class="score-bar mb-2"><span style="width: {{ [g.score * 8, 100]|min }}%"></span></div>
+            {% for f in g.fragments %}
+            <div class="fragment {% if not loop.last %}mb-2{% endif %}">
+              {% if g.fragments|length > 1 %}
+              <div class="small text-muted mb-1">片段 {{ f.fragment_no }}/{{ f.fragment_total }}</div>
+              {% endif %}
+              <div class="small" style="white-space: pre-wrap;">{{ f.content[:300] }}{% if f.content|length > 300 %}…{% endif %}</div>
+            </div>
+            {% endfor %}
           </div>
         </div>
       </div>

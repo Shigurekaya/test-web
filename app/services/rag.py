@@ -12,6 +12,8 @@ from app.extensions import db
 from app.models import Document, KnowledgeChunk, QAHistory
 from app.utils import auto_summary
 
+_DOMAIN_LOADED = False
+
 
 def chunk_text(text: str, chunk_size: int = 400, overlap: int = 50) -> list[str]:
     text = (text or "").strip()
@@ -61,8 +63,61 @@ def rebuild_chunks_for_document(doc: Document, chunk_size: int = 400, overlap: i
     return len(pieces)
 
 
+# 领域补充词表：jieba 默认词典未收录、但本系统高频使用的业务词。
+# 「年假」就是一个典型——默认分词会切成 ['年','假']，两个单字都被长度过滤丢掉，
+# 于是整个分词结果为空集，标题/标签加权全部失效（本系统的示例检索词正是「年假」）。
+DOMAIN_WORDS = (
+    "年假 年休假 调休 加班 报销 差旅 出差 住宿 试用期 入职 离职 转正 社保 公积金 基数",
+    "密钥 轮换 密级 机密 脱敏 备份 容灾 演练 限流 网关 密钥轮换",
+    "续费 商机 线索 首触 成交 话术 值班 升级矩阵 客诉",
+    "用印 印章 合同模板 发票 验真 驳回 预算 滚动预测 采购 审批流",
+    "复盘 述职 学分 选修课 固定资产 盘点 门禁 VPN 发布窗口 代码评审",
+    "知识库 知识财富库 关系图 图谱 检索 问答 分词 切分 片段 权限",
+    "OA 工号 直属主管 分管领导 人事部 财务部 信息部 产品部 运营部 市场部 法务部 技术部 综合部",
+)
+
+
+def _ensure_domain_words() -> None:
+    """把领域词表注册进 jieba（幂等，只在首次调用时执行）。"""
+    global _DOMAIN_LOADED
+    if _DOMAIN_LOADED:
+        return
+    words = [w for group in DOMAIN_WORDS for w in group.split() if len(w) > 1]
+    for word in words:
+        jieba.add_word(word, freq=200_000)
+    _DOMAIN_LOADED = True
+
+
+def _cjk_bigrams(text: str) -> set[str]:
+    """连续汉字的相邻二字组合。
+
+    作为分词的安全网：即使某个词不在任何词典里（如新造的业务缩写），
+    二字组也能让检索拿到可用的重叠信号，而不是空集。
+    """
+    chars = [c for c in text if "\u4e00" <= c <= "\u9fff"]
+    return {"".join(chars[i : i + 2]) for i in range(len(chars) - 1)}
+
+
 def _tokenize(text: str) -> set[str]:
-    return {t.strip().lower() for t in jieba.lcut(text or "") if len(t.strip()) > 1}
+    """把查询或正文切成用于检索的词集合。
+
+    组合三种信号，尽量不出现空集：
+    1. jieba 分词结果（词典词，精度高）；
+    2. 领域补充词表覆盖的业务术语；
+    3. 相邻汉字二字组，用于兜底词典未收录的新词。
+
+    单个汉字不进入结果（噪声太高），因此纯单字输入仍可能为空集，
+    此时打分逻辑会退化为整串子串匹配（见 score_chunk）。
+    """
+    text = text or ""
+    if not text.strip():
+        return set()
+    _ensure_domain_words()
+    lower = text.lower()
+    tokens = {t.strip().lower() for t in jieba.lcut(lower) if len(t.strip()) > 1}
+    if not tokens:
+        tokens = _cjk_bigrams(lower)
+    return tokens
 
 
 def score_chunk(question: str, question_tokens: set[str], chunk: KnowledgeChunk) -> float:

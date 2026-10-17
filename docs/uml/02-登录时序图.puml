@@ -2,6 +2,7 @@
 actor 用户
 participant "浏览器" as UI
 participant "AuthController" as Auth
+participant "RateLimiter" as Limiter
 participant "UserModel" as User
 participant "AuditLog" as Audit
 database "SQLite" as DB
@@ -9,18 +10,40 @@ database "SQLite" as DB
 用户 -> UI : 输入用户名密码
 UI -> Auth : POST /auth/login
 activate Auth
-Auth -> User : 查询用户
-User -> DB : SELECT users
-DB --> User : row
-User --> Auth : User/None
-alt 密码正确
-  Auth -> Audit : 写 login 日志
-  Audit -> DB : INSERT audit_logs
-  Auth --> UI : 302 /dashboard + Session
-  UI --> 用户 : 进入工作台
-else 密码错误
-  Auth --> UI : 登录页 + 错误提示
-  UI --> 用户 : 看到失败信息
+Auth -> Limiter : 是否已锁定？(按来源地址)
+activate Limiter
+Limiter --> Auth : 未锁定 / 已锁定
+deactivate Limiter
+
+alt 已锁定（窗口内失败达阈值）
+  Auth --> UI : 429 + 重试提示
+  UI --> 用户 : 暂时无法登录
+else 未锁定
+  Auth -> User : 查询用户
+  activate User
+  User -> DB : SELECT users
+  DB --> User : row
+  User --> Auth : User/None
+  deactivate User
+
+  alt 密码正确
+    Auth -> Limiter : 清零失败计数
+    Auth -> Audit : 写 login 日志
+    activate Audit
+    Audit -> DB : INSERT audit_logs
+    deactivate Audit
+    Auth --> UI : 302 /dashboard + Session
+    UI --> 用户 : 进入工作台
+  else 密码错误
+    Auth -> Limiter : 记录一次失败
+    Auth -> Audit : 写 login_failed 日志
+    activate Audit
+    Audit -> DB : INSERT audit_logs
+    deactivate Audit
+    Auth --> UI : 登录页 + 错误提示
+    UI --> 用户 : 看到失败信息
+  end
 end
 deactivate Auth
 @enduml
+

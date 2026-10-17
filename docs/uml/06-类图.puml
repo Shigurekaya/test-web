@@ -58,6 +58,16 @@ class AuditLog {
   +detail: str
 }
 
+class RateLimiter {
+  -events: dict[str, list[float]]
+  +max_attempts: int
+  +window_seconds: int
+  +record_failure(key)
+  +clear(key)
+  +is_locked(key): bool
+  +retry_after(key): int
+}
+
 class QAHistory {
   +id: int
   +question: str
@@ -71,6 +81,12 @@ Category "1" -- "*" Document
 Document "1" -- "*" KnowledgeChunk
 Document "1" -- "*" Favorite
 User "1" -- "*" Favorite
+note right of AuditLog
+  action 取值：login / login_failed / logout /
+  view_document / create_document /
+  edit_document / delete_document / ask_qa
+end note
+
 User "1" -- "*" AuditLog
 User "1" -- "*" QAHistory
 GraphNode "1" -- "*" GraphEdge : out

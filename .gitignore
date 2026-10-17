@@ -7,3 +7,18 @@ instance/*.log
 uploads/*
 !uploads/.gitkeep
 .DS_Store
+
+# 测试与覆盖率
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# UML 本地渲染工具：jdk4py 自带 JRE 体积大，plantuml.jar 约 30MB，均不入库
+# 需要时运行 scripts/setup_uml.py 一键准备（脚本会写入 .tools/）
+.venv-*/
+.venv-jdk*/
+.venv-plantuml*/
+.tools/plantuml/*.jar
+.tools/fonts/*.ttf
+.cache/

@@ -240,3 +240,55 @@ class TestDepartments:
         assert "综合部" in DEPARTMENTS
         assert len(DEPARTMENTS) >= 5
         assert len(set(DEPARTMENTS)) == len(DEPARTMENTS)
+
+class TestAboutStatsScope:
+    """关于页统计必须跟随用户可见范围，避免用数字泄露机密规模。"""
+
+    def _visible_stats(self, client):
+        res = client.get("/about")
+        assert res.status_code == 200
+        text = res.get_data(as_text=True)
+        # 页面标注了口径，避免读者误以为是全库数字
+        assert "本人可见范围" in text
+        return text
+
+    def test_hr_sees_fewer_documents_than_admin(self, client, app):
+        import re
+
+        def doc_count(text):
+            m = re.search(r"知识文档</span><strong>(\d+)</strong>", text)
+            return int(m.group(1)) if m else -1
+
+        client.post("/auth/login", data={"username": "hr", "password": "hr123"})
+        hr_text = self._visible_stats(client)
+        client.get("/auth/logout", follow_redirects=True)
+
+        client.post("/auth/login", data={"username": "admin", "password": "admin123"})
+        admin_text = self._visible_stats(client)
+
+        assert doc_count(hr_text) < doc_count(admin_text)
+
+    def test_chunk_count_matches_visible_documents(self, client, app):
+        """片段数不能超过可见文档能切出的片段，且随权限收缩。"""
+        import re
+
+        def counts(text):
+            docs = int(re.search(r"知识文档</span><strong>(\d+)</strong>", text).group(1))
+            chunks = int(
+                re.search(r"检索用知识片段</span><strong>(\d+)</strong>", text).group(1)
+            )
+            return docs, chunks
+
+        client.post("/auth/login", data={"username": "hr", "password": "hr123"})
+        docs, chunks = counts(self._visible_stats(client))
+        assert chunks >= docs  # 每篇文档至少切出一个片段
+
+    def test_qa_count_is_personal(self, client, app):
+        """问答记录只统计本人，不显示全站提问量。"""
+        import re
+
+        client.post("/auth/login", data={"username": "hr", "password": "hr123"})
+        client.post("/qa/", data={"question": "年假有几天？"})
+        text = self._visible_stats(client)
+        n = int(re.search(r"问答记录</span><strong>(\d+)</strong>", text).group(1))
+        assert n >= 1

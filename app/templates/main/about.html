@@ -32,7 +32,10 @@
   </div>
   <div class="col-lg-5">
     <div class="card panel mb-3">
-      <div class="card-header bg-white fw-semibold">当前库内规模（演示数据）</div>
+      <div class="card-header bg-white fw-semibold">
+        当前库内规模（演示数据）
+        {% if stats_scope %}<span class="badge text-bg-light text-dark align-middle">{{ stats_scope }}</span>{% endif %}
+      </div>
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between"><span>知识文档</span><strong>{{ stats.documents }}</strong></li>
         <li class="list-group-item d-flex justify-content-between"><span>检索用知识片段</span><strong>{{ stats.chunks }}</strong></li>

@@ -92,16 +92,30 @@ def dashboard():
 @bp.route("/about")
 @login_required
 def about():
+    """关于页。
+
+    统计口径跟随当前用户的可见范围：机密文档的只数、以及由此切分出的片段数
+    属于权限信息，直接显示全库数字会让看不到文档的人推断出库里有多少机密材料。
+    图谱节点/边与问答历史保持全量口径（前者是结构概览，后者只统计自己的提问）。
+    """
+    visible_docs = searchable_documents(current_user)
+    visible_ids = [d.id for d in visible_docs]
+    visible_chunks = (
+        KnowledgeChunk.query.filter(KnowledgeChunk.document_id.in_(visible_ids)).count()
+        if visible_ids
+        else 0
+    )
     return render_template(
         "main/about.html",
         meta=meta,
         stats={
-            "documents": Document.query.count(),
-            "chunks": KnowledgeChunk.query.count(),
+            "documents": len(visible_docs),
+            "chunks": visible_chunks,
             "nodes": GraphNode.query.count(),
             "edges": GraphEdge.query.count(),
-            "qa": QAHistory.query.count(),
+            "qa": QAHistory.query.filter_by(user_id=current_user.id).count(),
         },
+        stats_scope="本人可见范围",
     )
 
 

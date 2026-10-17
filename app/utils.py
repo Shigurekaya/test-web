@@ -1,3 +1,5 @@
+import math
+import time
 from datetime import UTC, datetime
 from functools import wraps
 from urllib.parse import urlparse
@@ -59,6 +61,7 @@ MODE_LABELS = {
 
 ACTION_LABELS = {
     "login": "登录",
+    "login_failed": "登录失败",
     "logout": "退出",
     "view_document": "查看文档",
     "create_document": "创建文档",
@@ -131,6 +134,71 @@ def auto_summary(content: str, limit: int = 140) -> str:
         if idx > limit // 3:
             return cut[: idx + 1]
     return cut.rstrip(" ,，、") + "…"
+
+
+class RateLimiter:
+    """进程内的滑动窗口限流器（按 key 计数）。
+
+    适用场景是单机部署下的登录防爆破；演示环境单进程足够。
+    多进程/多机部署需换成 Redis 之类的共享存储，这里不假装支持。
+    """
+
+    def __init__(self, max_attempts: int = 8, window_seconds: int = 300, key_prefix: str = ""):
+        self.max_attempts = max_attempts
+        self.window_seconds = window_seconds
+        self.key_prefix = key_prefix
+        self._events: dict[str, list[float]] = {}
+
+    def _prune(self, hits: list[float], now: float) -> list[float]:
+        cutoff = now - self.window_seconds
+        return [t for t in hits if t > cutoff]
+
+    def record_failure(self, key: str, now: float | None = None) -> int:
+        """记录一次失败，返回窗口内累计失败次数。"""
+        now = time.time() if now is None else now
+        hits = self._prune(self._events.setdefault(key, []), now)
+        hits.append(now)
+        self._events[key] = hits
+        return len(hits)
+
+    def clear(self, key: str) -> None:
+        self._events.pop(key, None)
+
+    def is_locked(self, key: str, now: float | None = None) -> bool:
+        now = time.time() if now is None else now
+        hits = self._prune(self._events.setdefault(key, []), now)
+        self._events[key] = hits
+        return len(hits) >= self.max_attempts
+
+    def retry_after(self, key: str, now: float | None = None) -> int:
+        """距离解锁还剩多少秒（向上取整，至少 1 秒）。"""
+        now = time.time() if now is None else now
+        hits = self._prune(self._events.setdefault(key, []), now)
+        if len(hits) < self.max_attempts:
+            return 0
+        oldest = hits[-self.max_attempts] if len(hits) >= self.max_attempts else hits[0]
+        remaining = oldest + self.window_seconds - now
+        return max(1, math.ceil(remaining)) if remaining > 0 else 1
+
+    # --- Flask 请求封装：自动取客户端地址作为 key ---
+
+    def _key_from_request(self) -> str:
+        from flask import request
+
+        addr = request.remote_addr or "unknown"
+        return f"{self.key_prefix}:{addr}"
+
+    def record_failure_from_request(self) -> int:
+        return self.record_failure(self._key_from_request())
+
+    def clear_from_request(self) -> None:
+        self.clear(self._key_from_request())
+
+    def is_locked_from_request(self) -> bool:
+        return self.is_locked(self._key_from_request())
+
+    def retry_after_from_request(self) -> int:
+        return self.retry_after(self._key_from_request())
 
 
 def admin_required(view):

@@ -85,12 +85,14 @@ def create_app(config_class=Config):
 
     from app.blueprints.admin import bp as admin_bp
     from app.blueprints.auth import bp as auth_bp
+    from app.blueprints.auth import configure_login_limits
     from app.blueprints.graph import bp as graph_bp
     from app.blueprints.knowledge import bp as knowledge_bp
     from app.blueprints.main import bp as main_bp
     from app.blueprints.qa import bp as qa_bp
 
     app.register_blueprint(auth_bp)
+    configure_login_limits(app)
     app.register_blueprint(main_bp)
     app.register_blueprint(knowledge_bp)
     app.register_blueprint(qa_bp)

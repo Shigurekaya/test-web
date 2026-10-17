@@ -39,6 +39,10 @@ class Config:
     # 自动建表与演示数据灌入；生产环境应显式关闭（见 ProductionConfig）
     AUTO_SEED = os.environ.get("AUTO_SEED", "1") not in ("0", "false", "False")
 
+    # 登录防爆破：同一 IP 在窗口内失败次数超过阈值即临时锁定
+    LOGIN_MAX_ATTEMPTS = int(os.environ.get("LOGIN_MAX_ATTEMPTS", "8"))
+    LOGIN_WINDOW_SECONDS = int(os.environ.get("LOGIN_WINDOW_SECONDS", "300"))
+
     @staticmethod
     def init_app(app):
         """各环境共用的初始化钩子。"""

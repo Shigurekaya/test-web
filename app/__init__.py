@@ -83,12 +83,12 @@ def create_app(config_class=Config):
     def server_error(e):
         return render_template("errors/500.html"), 500
 
-    from app.blueprints.auth import bp as auth_bp
-    from app.blueprints.main import bp as main_bp
-    from app.blueprints.knowledge import bp as knowledge_bp
-    from app.blueprints.qa import bp as qa_bp
-    from app.blueprints.graph import bp as graph_bp
     from app.blueprints.admin import bp as admin_bp
+    from app.blueprints.auth import bp as auth_bp
+    from app.blueprints.graph import bp as graph_bp
+    from app.blueprints.knowledge import bp as knowledge_bp
+    from app.blueprints.main import bp as main_bp
+    from app.blueprints.qa import bp as qa_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)

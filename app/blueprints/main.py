@@ -2,7 +2,7 @@ from collections import Counter
 from datetime import timedelta
 
 from flask import Blueprint, jsonify, render_template
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 from sqlalchemy import text
 
 from app import meta

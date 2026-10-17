@@ -197,7 +197,7 @@ class TestRetrieve:
         而不是结果为空。
         """
         from app.extensions import db
-        from app.models import Document, KnowledgeChunk
+        from app.models import KnowledgeChunk
 
         doc = self._make_doc(
             db,

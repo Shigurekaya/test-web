@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -89,7 +89,7 @@ DEMO_ACCOUNTS = (
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def format_dt(value, fmt: str = "%Y-%m-%d %H:%M:%S") -> str:

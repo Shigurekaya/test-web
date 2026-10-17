@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.models import Category, Document, User
+from app.models import Document, User
 from app.services.rag import can_view_document, rank_documents, searchable_documents
 from app.utils import (
     DEPARTMENTS,

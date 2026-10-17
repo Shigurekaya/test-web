@@ -21,7 +21,7 @@ def test_02_login_fail(client):
         "/auth/login", data={"username": "admin", "password": "wrong"}, follow_redirects=True
     )
     assert res.status_code == 200
-    assert "用户名或密码错误".encode("utf-8") in res.data
+    assert "用户名或密码错误".encode() in res.data
 
 
 def test_03_login_success_dashboard(admin_client):
@@ -31,13 +31,13 @@ def test_03_login_success_dashboard(admin_client):
 def test_04_search_leave_policy(admin_client):
     res = admin_client.get("/knowledge/?q=年假")
     assert res.status_code == 200
-    assert "年假".encode("utf-8") in res.data
+    assert "年假".encode() in res.data
 
 
 def test_05_rag_answer(admin_client):
     res = admin_client.post("/qa/", data={"question": "员工年假有几天？"}, follow_redirects=True)
     assert res.status_code == 200
-    assert "年假".encode("utf-8") in res.data
+    assert "年假".encode() in res.data
 
 
 def test_06_secret_denied_for_hr(client, app):
@@ -53,7 +53,7 @@ def test_07_secret_allowed_for_it(client, app):
         doc_id = Document.query.filter_by(visibility="secret").first().id
     res = client.get(f"/knowledge/{doc_id}")
     assert res.status_code == 200
-    assert "信息安全".encode("utf-8") in res.data
+    assert "信息安全".encode() in res.data
 
 
 def test_08_graph_data(admin_client):
@@ -81,9 +81,9 @@ def test_09_create_document_and_index(admin_client):
         follow_redirects=True,
     )
     assert res.status_code == 200
-    assert "加班管理制度测试稿".encode("utf-8") in res.data
+    assert "加班管理制度测试稿".encode() in res.data
     qa = admin_client.post("/qa/", data={"question": "加班怎么补偿"}, follow_redirects=True)
-    assert "加班".encode("utf-8") in qa.data
+    assert "加班".encode() in qa.data
 
 
 def test_10_users_seeded(app):
@@ -157,8 +157,16 @@ def test_18_non_admin_gets_403_on_admin(client):
 # --- 可靠性：全新数据库可自动建表并灌入演示数据 ---
 
 def test_19_fresh_database_builds_and_seeds(fresh_client, fresh_app):
-    from app.extensions import db
-    from app.models import (AuditLog, Category, Document, GraphEdge, GraphNode, KnowledgeChunk, QAHistory, User)
+    from app.models import (
+        AuditLog,
+        Category,
+        Document,
+        GraphEdge,
+        GraphNode,
+        KnowledgeChunk,
+        QAHistory,
+        User,
+    )
 
     assert fresh_client.get("/health").status_code == 200
     with fresh_app.app_context():

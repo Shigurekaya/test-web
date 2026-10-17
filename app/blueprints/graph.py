@@ -1,9 +1,9 @@
-from flask import Blueprint, jsonify, render_template, request, flash, redirect, url_for
-from flask_login import login_required, current_user
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask_login import login_required
 
 from app.extensions import db
 from app.models import GraphEdge, GraphNode
-from app.services.graph import graph_payload, get_or_create_node, ensure_edge
+from app.services.graph import ensure_edge, get_or_create_node, graph_payload
 from app.utils import admin_required
 
 bp = Blueprint("graph", __name__, url_prefix="/graph")

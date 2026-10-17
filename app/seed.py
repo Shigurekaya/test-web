@@ -828,7 +828,7 @@ def _hash_passwords(specs) -> dict[str, str]:
         return {}
     workers = min(8, len(pending))
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        return dict(zip(pending, pool.map(generate_password_hash, pending.values())))
+        return dict(zip(pending, pool.map(generate_password_hash, pending.values()), strict=False))
 
 
 def _ensure_users():

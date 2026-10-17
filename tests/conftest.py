@@ -120,7 +120,6 @@ def db_counts(app):
         GraphNode,
         KnowledgeChunk,
         QAHistory,
-        User,
     )
 
     models = (

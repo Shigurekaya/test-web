@@ -5,6 +5,8 @@ import json
 import random
 from datetime import datetime, timedelta
 
+from werkzeug.security import generate_password_hash
+
 from app.extensions import db
 from app.models import (
     AuditLog,
@@ -813,8 +815,29 @@ DEMO_QA = [
 ]
 
 
+def _hash_passwords(specs) -> dict[str, str]:
+    """并行为新用户生成密码哈希。
+
+    scrypt 属 CPU 密集型，单机顺序跑 20 多个账号要十几秒；
+    预计算好的哈希不依赖数据库，因此可以安全地放到线程池里并发执行。
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    pending = {username: password for username, _d, _r, _dp, password in specs}
+    if not pending:
+        return {}
+    workers = min(8, len(pending))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        return dict(zip(pending, pool.map(generate_password_hash, pending.values())))
+
+
 def _ensure_users():
-    for username, display_name, role, department, password in USER_SPECS:
+    specs = list(USER_SPECS)
+    # 已存在的用户不重新哈希，只补建缺失账号所需的哈希
+    missing = [s for s in specs if not User.query.filter_by(username=s[0]).first()]
+    hashes = _hash_passwords(missing)
+
+    for username, display_name, role, department, password in specs:
         user = User.query.filter_by(username=username).first()
         if user:
             # 保持展示名/部门与 seed 一致（不覆盖已改密码）
@@ -828,7 +851,7 @@ def _ensure_users():
             role=role,
             department=department,
         )
-        user.set_password(password)
+        user.password_hash = hashes.get(username) or generate_password_hash(password)
         db.session.add(user)
     db.session.flush()
 

@@ -4,6 +4,9 @@
 """
 from __future__ import annotations
 
+import re
+from urllib.parse import quote
+
 import pytest
 
 from app.models import Document, User
@@ -292,3 +295,86 @@ class TestAboutStatsScope:
         text = self._visible_stats(client)
         n = int(re.search(r"问答记录</span><strong>(\d+)</strong>", text).group(1))
         assert n >= 1
+
+class TestAuditPagination:
+    """审计页改为服务端分页与筛选：页面不再一次渲染 200 行。"""
+
+    @pytest.fixture(autouse=True)
+    def _reset_login_limiter(self):
+        """限流器是模块级单例；别的用例可能把它留在锁定状态。"""
+        from app.blueprints.auth import login_limiter
+
+        login_limiter.clear("login:127.0.0.1")
+        login_limiter.clear("login:testclient")
+        yield
+        login_limiter.clear("login:127.0.0.1")
+        login_limiter.clear("login:testclient")
+
+    @staticmethod
+    def _row_count(text):
+        return text.count('data-detail')
+
+    def test_page_is_capped(self, admin_client):
+        text = admin_client.get('/admin/audits').get_data(as_text=True)
+        assert self._row_count(text) <= 25
+        assert 'class="pagination' in text
+
+    def test_second_page_differs_from_first(self, admin_client):
+        """翻页必须真的换数据；用时间戳比对（详情文案在种子里有重复）。"""
+        first = admin_client.get('/admin/audits').get_data(as_text=True)
+        second = admin_client.get('/admin/audits?page=2').get_data(as_text=True)
+        assert self._row_count(second) > 0
+        ts1 = re.findall(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", first)
+        ts2 = re.findall(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", second)
+        assert ts1 and ts2
+        assert set(ts1).isdisjoint(set(ts2))
+        # 第 1 页的时间整体晚于第 2 页（倒序排列）
+        assert max(ts1) > max(ts2)
+
+    def test_out_of_range_page_is_clamped(self, admin_client):
+        res = admin_client.get('/admin/audits?page=99999')
+        assert res.status_code == 200
+
+    def test_action_filter_narrows_results(self, client, app):
+        """先制造一条失败登录，再按动作筛选。"""
+        client.post('/auth/login', data={'username': 'ghost_user', 'password': 'x'})
+        client.post('/auth/login', data={'username': 'admin', 'password': 'admin123'})
+
+        text = client.get('/admin/audits?action=login_failed').get_data(as_text=True)
+        assert self._row_count(text) >= 1
+        assert '登录失败' in text
+        assert '筛选出' in text
+
+    def test_unknown_action_is_ignored(self, admin_client):
+        """非法动作值不应筛出空集（当作未筛选处理）。"""
+        text = admin_client.get('/admin/audits?action=not_a_real_action').get_data(as_text=True)
+        assert self._row_count(text) > 0
+
+    def test_user_filter_narrows_results(self, admin_client, app):
+        from app.models import AuditLog
+
+        with app.app_context():
+            sample = (
+                AuditLog.query.join(AuditLog.user)
+                .filter(User.username == 'tech_xu')
+                .count()
+            )
+        if sample == 0:
+            pytest.skip('种子数据中没有 tech_xu 的审计记录')
+        text = admin_client.get('/admin/audits?user=tech_xu').get_data(as_text=True)
+        assert 0 < self._row_count(text) <= sample
+
+    def test_detail_filter_uses_substring(self, admin_client, app):
+        from app.models import AuditLog
+
+        with app.app_context():
+            row = AuditLog.query.filter(AuditLog.detail.like('%休假%')).first()
+        if row is None:
+            pytest.skip('种子数据中没有含「休假」的审计明细')
+        text = admin_client.get('/admin/audits?detail=' + quote('休假')).get_data(as_text=True)
+        assert self._row_count(text) >= 1
+
+    def test_pagination_preserves_active_filters(self, admin_client):
+        """翻页链接必须带上当前筛选条件，否则第 2 页会丢掉筛选。"""
+        text = admin_client.get('/admin/audits?action=login').get_data(as_text=True)
+        assert 'action=login' in text

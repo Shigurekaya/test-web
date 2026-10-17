@@ -13,12 +13,12 @@
   <div class="card-body">
     <form method="post">
       <div class="mb-3">
-        <label class="form-label">标题 <span class="text-danger">*</span></label>
-        <input class="form-control" name="title" required value="{{ doc.title if doc else '' }}" placeholder="如：员工年休假管理办法">
+        <label class="form-label" for="fld_title">标题 <span class="text-danger">*</span></label>
+        <input class="form-control" id="fld_title" name="title" required value="{{ doc.title if doc else '' }}" placeholder="如：员工年休假管理办法">
       </div>
       <div class="mb-3">
-        <label class="form-label">摘要</label>
-        <input class="form-control" name="summary" value="{{ doc.summary if doc else '' }}" placeholder="一句话说明文档用途；可留空自动生成">
+        <label class="form-label" for="fld_summary">摘要</label>
+        <input class="form-control" name="summary" value="{{ doc.summary if doc else '' }}" placeholder="一句话说明文档用途；可留空自动生成" id="fld_summary">
       </div>
       <div class="row g-3 mb-3">
         <div class="col-md-3">
@@ -55,13 +55,13 @@
           </select>
         </div>
         <div class="col-md-2">
-          <label class="form-label">版本</label>
-          <input class="form-control" name="version" value="{{ doc.version if doc else '1.0' }}">
+          <label class="form-label" for="fld_version">版本</label>
+          <input class="form-control" name="version" value="{{ doc.version if doc else '1.0' }}" id="fld_version">
         </div>
       </div>
       <div class="mb-3">
-        <label class="form-label">标签（逗号分隔）</label>
-        <input class="form-control" name="tags" value="{{ doc.tags if doc else '' }}" placeholder="年假,人事">
+        <label class="form-label" for="fld_tags">标签（逗号分隔）</label>
+        <input class="form-control" name="tags" value="{{ doc.tags if doc else '' }}" placeholder="年假,人事" id="fld_tags">
       </div>
       <div class="mb-3">
         <label class="form-label">正文 <span class="text-danger">*</span></label>

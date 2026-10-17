@@ -9,7 +9,7 @@
       <div class="card-body">
         <form method="post">
           <input type="hidden" name="action" value="add_node">
-          <div class="mb-2"><input class="form-control" name="name" placeholder="节点名称" required></div>
+          <div class="mb-2"><input class="form-control" name="name" placeholder="节点名称" aria-label="节点名称" required></div>
           <div class="mb-2">
             <select class="form-select" name="node_type">
               {% for t in ['concept','department','project','keyword','document'] %}
@@ -17,7 +17,7 @@
               {% endfor %}
             </select>
           </div>
-          <div class="mb-2"><input class="form-control" name="description" placeholder="说明"></div>
+          <div class="mb-2"><input class="form-control" name="description" placeholder="说明" aria-label="节点说明"></div>
           <button class="btn btn-primary" type="submit">添加节点</button>
         </form>
       </div>
@@ -27,9 +27,9 @@
       <div class="card-body">
         <form method="post">
           <input type="hidden" name="action" value="add_edge">
-          <div class="mb-2"><input class="form-control" name="source_name" placeholder="源节点名" required></div>
-          <div class="mb-2"><input class="form-control" name="target_name" placeholder="目标节点名" required></div>
-          <div class="mb-2"><input class="form-control" name="relation" placeholder="关系，如 关联/属于" value="关联"></div>
+          <div class="mb-2"><input class="form-control" name="source_name" placeholder="源节点名" aria-label="源节点名" required></div>
+          <div class="mb-2"><input class="form-control" name="target_name" placeholder="目标节点名" aria-label="目标节点名" required></div>
+          <div class="mb-2"><input class="form-control" name="relation" placeholder="关系，如 关联/属于" value="关联" aria-label="关系名称"></div>
           <button class="btn btn-primary" type="submit">添加关系</button>
         </form>
       </div>

@@ -20,12 +20,12 @@
       <form method="post" class="mb-3">
         <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
         <div class="mb-3">
-          <label class="form-label">用户名</label>
-          <input class="form-control" name="username" value="admin" required autocomplete="username">
+          <label class="form-label" for="loginUsername">用户名</label>
+          <input class="form-control" id="loginUsername" name="username" value="admin" required autocomplete="username">
         </div>
         <div class="mb-3">
-          <label class="form-label">密码</label>
-          <input class="form-control" type="password" name="password" value="admin123" required autocomplete="current-password">
+          <label class="form-label" for="loginPassword">密码</label>
+          <input class="form-control" id="loginPassword" type="password" name="password" value="admin123" required autocomplete="current-password">
         </div>
         <button class="btn btn-primary w-100" type="submit">登录</button>
       </form>

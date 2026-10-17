@@ -12,7 +12,7 @@
   <div class="card-body filter-bar py-3">
     <form class="row g-2 align-items-end" method="get" onsubmit="return false;">
       <div class="col-md-3">
-        <label class="form-label small text-muted mb-1">关键词</label>
+        <label class="form-label small text-muted mb-1" for="userFilterQ">关键词</label>
         <input class="form-control form-control-sm" id="userFilterQ" placeholder="用户名 / 姓名">
       </div>
       <div class="col-md-3">
@@ -46,13 +46,13 @@
     <table class="table mb-0 align-middle" id="userTable">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>用户名</th>
-          <th>姓名</th>
-          <th>角色</th>
-          <th>部门</th>
-          <th>文档数</th>
-          <th>创建时间</th>
+          <th scope="col">ID</th>
+          <th scope="col">用户名</th>
+          <th scope="col">姓名</th>
+          <th scope="col">角色</th>
+          <th scope="col">部门</th>
+          <th scope="col">文档数</th>
+          <th scope="col">创建时间</th>
         </tr>
       </thead>
       <tbody>

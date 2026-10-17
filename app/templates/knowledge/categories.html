@@ -14,12 +14,12 @@
       <div class="card-body">
         <form method="post">
           <div class="mb-3">
-            <label class="form-label">分类名</label>
-            <input class="form-control" name="name" required placeholder="例如：运营规范">
+            <label class="form-label" for="fld_name">分类名</label>
+            <input class="form-control" name="name" required placeholder="例如：运营规范" id="fld_name">
           </div>
           <div class="mb-3">
-            <label class="form-label">说明</label>
-            <input class="form-control" name="description" placeholder="一句话描述用途">
+            <label class="form-label" for="fld_description">说明</label>
+            <input class="form-control" name="description" placeholder="一句话描述用途" id="fld_description">
           </div>
           <button class="btn btn-primary" type="submit">新增</button>
         </form>
@@ -32,10 +32,10 @@
         <table class="table mb-0 align-middle">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>分类名</th>
-              <th>说明</th>
-              <th class="text-end">文档数</th>
+              <th scope="col">ID</th>
+              <th scope="col">分类名</th>
+              <th scope="col">说明</th>
+              <th scope="col" class="text-end">文档数</th>
             </tr>
           </thead>
           <tbody>

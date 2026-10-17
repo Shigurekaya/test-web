@@ -553,3 +553,22 @@ a:hover { color: var(--brand-soft); }
 [data-bs-theme="dark"] .hit-card .fragment {
   border-left-color: rgba(120, 170, 255, 0.45);
 }
+
+/* 键盘用户可跳到主内容（视觉隐藏，聚焦时显现） */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1080;
+  padding: 0.5rem 0.9rem;
+  background: #0f6f78;
+  color: #fff;
+  border-radius: 0 0 10px 0;
+  font-size: 0.875rem;
+}
+
+.skip-link:focus {
+  left: 0;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

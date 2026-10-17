@@ -3,6 +3,8 @@ __pycache__/
 *.pyc
 instance/*.db
 instance/*.log
+instance/*.pid
+instance/_boot_server.py
 .env
 uploads/*
 !uploads/.gitkeep

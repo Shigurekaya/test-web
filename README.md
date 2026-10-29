@@ -1,10 +1,28 @@
 # 智慧企业知识财富库系统
 
+[![CI](https://github.com/Shigurekaya/test-web/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Shigurekaya/test-web/actions/workflows/ci.yml)
+![Vue 3](https://img.shields.io/badge/Vue-3-42b883)
+![Flask](https://img.shields.io/badge/Flask-3-000000?logo=flask&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-133%20passed-brightgreen)
+
 V2.0 课程大作业。一个采用前后端分离架构的企业知识管理 Web 应用，覆盖需求分析、系统设计、编码实现、自动化测试、UML 建模、项目管理和最终文档交付。
 
 > 前端：Vue 3 + Vite + Vue Router + ECharts
 > 后端：Flask 3 REST API + SQLAlchemy + SQLite + jieba
 > 测试：pytest，当前 **133 条自动化测试全部通过**
+
+## 交付物直达
+
+| 交付物 | 入口 |
+|---|---|
+| 完整 Word 报告 | [智慧企业知识财富库系统-课程大作业完整报告.docx](./deliverables/智慧企业知识财富库系统-课程大作业完整报告.docx) |
+| 完整 PDF 报告 | [智慧企业知识财富库系统-课程大作业完整报告.pdf](./deliverables/pdf/智慧企业知识财富库系统-课程大作业完整报告.pdf) |
+| 完整提交包 | [智慧企业知识财富库系统-课程大作业完整提交包.zip](./deliverables/智慧企业知识财富库系统-课程大作业完整提交包.zip) |
+| 提交与运行说明 | [00-提交说明.md](./00-提交说明.md) |
+| 实现说明 | [实现说明](./docs/guides/实现说明.md) |
+| 正式文档索引 | [docs/course/README.md](./docs/course/README.md) |
+| 交付验收记录 | [交付验收记录.md](./deliverables/交付验收记录.md) |
 
 ## 1. 系统能力
 
@@ -96,13 +114,15 @@ npm run dev
 ├── tests/                        pytest 自动化测试
 ├── docs/
 │   ├── course/                   课程作业正式文档
+│   ├── guides/                   提交说明与实现说明
 │   ├── screenshots/              页面截图
 │   ├── uml/                      PlantUML 源文件与渲染图
 │   └── 用例描述/                 详细用例说明
-├── deliverables/                 最终 Word 文档与压缩包
-├── scripts/                      UML 与文档生成脚本
+├── deliverables/                 Word、PDF、验收记录与完整提交包
+├── scripts/                      UML、文档生成与导出一致性脚本
 ├── run.py
 ├── start.ps1 / stop.ps1
+├── 00-提交说明.md
 └── README.md
 ```
 
@@ -131,6 +151,8 @@ npm run dev
 ```powershell
 .\.venv\Scripts\python.exe -m ruff check app scripts tests run.py
 ```
+
+GitHub Actions 会同时执行 Ruff、133 条 pytest 和 Vue 生产构建，避免只通过后端检查却遗漏前端编译问题。
 
 ## 6. REST API
 

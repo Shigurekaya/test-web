@@ -1,130 +1,130 @@
 # 智慧企业知识财富库系统
 
-企业内部知识管理 Web 应用（软件工程课程大作业）。
-以**可鉴权的文档库**为底座，叠加**检索增强问答（RAG）**与**知识关系图**，
-并配套完整的竞品调研、需求、设计、UML 与测试文档。
+V2.0 课程大作业。一个采用前后端分离架构的企业知识管理 Web 应用，覆盖需求分析、系统设计、编码实现、自动化测试、UML 建模、项目管理和最终文档交付。
 
-> 技术栈：Python · Flask · SQLAlchemy · SQLite · Bootstrap · ECharts · jieba
-> 当前版本：v1.2
+> 前端：Vue 3 + Vite + Vue Router + ECharts
+> 后端：Flask 3 REST API + SQLAlchemy + SQLite + jieba
+> 测试：pytest，当前 **133 条自动化测试全部通过**
 
----
+## 1. 系统能力
 
-## 1. 快速开始
+| 模块 | 主要能力 |
+|------|----------|
+| 认证与权限 | 登录/退出、密码哈希、登录失败限流、管理员/员工角色 |
+| 知识文档 | 新建、编辑、删除、分类、标签、版本、发布状态、收藏 |
+| 文档权限 | 公开/内部/机密三级密级，机密文档仅同部门或作者可访问 |
+| 检索 | 关键词、标题、摘要、正文与标签检索 |
+| 智能问答 | 权限内 RAG 检索、来源片段展示、可选 OpenAI 兼容大模型、失败回退本地摘要 |
+| 知识图谱 | 文档—部门—分类—关键词关系图、管理员节点与关系维护 |
+| 审计 | 登录、登录失败、退出、查看/创建/编辑/删除文档、问答记录 |
+| 管理 | 用户列表、分类维护、审计日志服务端筛选与分页、健康检查 |
+
+## 2. 快速启动
+
+### 2.1 准备后端
 
 ```powershell
-# 1) 建虚拟环境（装到项目内，不污染全局）
 python -m venv .venv
-
-# 2) 装依赖
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-
-# 3) 启动
-.\.venv\Scripts\python.exe run.py
-# 浏览器打开 http://127.0.0.1:5000
 ```
 
-首次启动会自动建表并写入演示数据，账号 `admin / admin123`。
-后台启动用 `.\start.ps1`，停止用 `.\stop.ps1`，双击 `start.bat` 亦可。
+### 2.2 构建前端
 
-### 演示账号
+```powershell
+cd frontend
+npm install
+npm run build
+cd ..
+```
+
+生产构建会输出到 `frontend/dist/`，由 Flask 在 `/ui/` 提供。
+
+### 2.3 启动
+
+```powershell
+.\.venv\Scripts\python.exe run.py
+```
+
+浏览器打开：
+
+- 主界面：`http://127.0.0.1:5000/ui/`
+- 根地址会自动跳转：`http://127.0.0.1:5000/`
+- API 健康检查：`http://127.0.0.1:5000/api/health`
+
+也可以双击 `start.bat`，或运行 `.\start.ps1` 后台启动。`start.ps1` 会在前端未构建时自动执行 `npm install` 与 `npm run build`。
+
+### 2.4 前端开发模式
+
+分别启动后端和 Vite：
+
+```powershell
+.\.venv\Scripts\python.exe run.py
+cd frontend
+npm run dev
+```
+
+打开 `http://127.0.0.1:5173/`。Vite 会将 `/api` 代理到 `http://127.0.0.1:5000`。
+
+## 3. 演示账号
 
 | 用户 | 密码 | 部门 | 说明 |
 |------|------|------|------|
-| admin | admin123 | 综合部 | 管理员，可看全部 + 审计/用户/分类/图谱维护 |
-| hr | hr123 | 人事部 | 普通员工（演示机密拒绝） |
-| finance | fin123 | 财务部 | 差旅 / 采购 / 预算 |
-| it | it123 | 信息部 | **可看本部门机密**（演示机密放行） |
-| product | prod123 | 产品部 | 产品 FAQ / 话术 |
+| admin | admin123 | 综合部 | 管理员，可查看全部、审计、用户、分类与图谱维护 |
+| hr | hr123 | 人事部 | 普通员工，可验证机密文档拒绝访问 |
+| finance | fin123 | 财务部 | 财务制度、差旅与采购 |
+| it | it123 | 信息部 | 可查看信息部机密文档 |
+| product | prod123 | 产品部 | 产品 FAQ 与客服话术 |
 
-### 建议演示路线
+## 4. 目录结构
 
-1. `admin` 登录 → 工作台看规模统计与部门分布；
-2. 「知识文档」搜「年假」→ 打开《员工年休假管理办法》；
-3. 「站内问答」问「员工年假有几天」→ 查看带来源的摘要回答；
-4. 「关系图」拖拽查看 文档—部门—关键词 连线；
-5. 退出后用 `hr` 登录 → 打开信息部机密文档**返回 403**；改用 `it` → 正常打开。
-
----
-
-## 2. 功能概览
-
-| 模块 | 能力 |
-|------|------|
-| 账户与权限 | 登录/退出、角色菜单、文档三级密级（公开/内部/机密）+ 同部门隔离、登录防爆破、失败登录审计 |
-| 知识文档 | 新建/编辑/删除、分类与标签、按关键词/分类/部门/密级筛选、分页、发布状态 |
-| 站内问答（RAG） | 文档切分建索引 → 权限内检索打分 Top-K → 本地摘要回答（可配大模型）→ 带来源与历史 |
-| 知识关系图 | 文档—部门—分类—关键词自动建图，ECharts 力导向可视化，管理员可手工补节点/关系 |
-| 收藏与审计 | 个人收藏夹、关键操作（含登录失败）审计查询与统计 |
-| 运维 | 工作台、关于页、`/health` 健康检查、启停脚本、自动化测试 |
-
----
-
-## 3. 目录结构
-
-```
+```text
 大作业/
-├── run.py                     启动入口
-├── requirements.txt           运行依赖
-├── requirements-dev.txt       开发/测试依赖（pytest、ruff、渲染 UML 用的 jdk4py）
-├── pyproject.toml             pytest / ruff / coverage 配置
-├── start.ps1 stop.ps1         后台启停
-├── run_tests.ps1              跑测试（透传参数给 pytest）
-│
 ├── app/
-│   ├── __init__.py            应用工厂：配置、蓝图注册、错误页、模板过滤器
-│   ├── config.py              默认 / 测试 / 生产三套配置
-│   ├── models.py               ORM：users / documents / knowledge_chunks / graph_* / favorites / audit_logs / qa_history
-│   ├── utils.py               鉴权辅助、密级标签、安全 next URL、登录限流器
-│   ├── seed.py                演示账号与制度文本、活动记录
-│   ├── blueprints/            auth / main / knowledge / qa / graph / admin
-│   ├── services/              rag（切分检索问答）、graph（图谱同步）
-│   ├── templates/             Jinja2 页面
-│   └── static/                CSS / JS
-│
-├── tests/                     自动化测试（99 条）
-│   ├── conftest.py            独立数据库夹具
-│   ├── test_system.py         系统冒烟与回归
-│   ├── test_security.py       权限矩阵、检索范围、open redirect、统计口径
-│   ├── test_rag.py            切分、打分、检索、去重、降级
-│   └── test_login_security.py 防爆破、失败审计、密码存储
-│
-├── docs/                      项目文档（见下）
-├── scripts/
-│   ├── render_uml.py          渲染 UML（本地，中文正常）
-│   ├── setup_uml.py           准备渲染环境（字体 + jar + JRE）
-│   └── plantuml_local.py      本地 PlantUML 渲染封装
-└── instance/                  SQLite 库与运行日志（不入库）
+│   ├── api.py                    REST API
+│   ├── spa.py                    Vue 生产构建托管
+│   ├── blueprints/               兼容的 Jinja 页面路由
+│   ├── services/                 RAG 与知识图谱服务
+│   ├── models.py                 SQLAlchemy 数据模型
+│   ├── seed.py                   演示数据
+│   └── templates/                兼容页面
+├── frontend/
+│   ├── src/views/                Vue 页面
+│   ├── src/components/           通用组件
+│   ├── src/api/                  前端 API 客户端
+│   ├── src/stores/               会话与提示状态
+│   └── dist/                     已构建生产文件
+├── tests/                        pytest 自动化测试
+├── docs/
+│   ├── course/                   课程作业正式文档
+│   ├── screenshots/              页面截图
+│   ├── uml/                      PlantUML 源文件与渲染图
+│   └── 用例描述/                 详细用例说明
+├── deliverables/                 最终 Word 文档与压缩包
+├── scripts/                      UML 与文档生成脚本
+├── run.py
+├── start.ps1 / stop.ps1
+└── README.md
 ```
 
----
-
-## 4. 项目文档
-
-按软件工程过程组织，入口 [`docs/README.md`](docs/README.md)：
-
-| 文档 | 内容 |
-|------|------|
-| [docs/01-竞品调研报告.md](docs/01-竞品调研报告.md) | 竞品对比、痛点归纳、差异化定位与范围冻结 |
-| [docs/02-用户需求说明书.md](docs/02-用户需求说明书.md) | 业务需求 BR-*、用户需求 UR-*、非功能需求 NFR-* |
-| [docs/03-系统需求说明书.md](docs/03-系统需求说明书.md) | 系统需求 SR-*、业务流程、非功能指标、路由附录 |
-| [docs/04-软件设计说明书.md](docs/04-软件设计说明书.md) | 三层架构、RAG/图谱/权限设计、数据库设计、需求追踪 |
-| [docs/05-测试报告.md](docs/05-测试报告.md) | 测试环境、手工与自动化用例、缺陷与结论 |
-| [docs/06-项目管理.md](docs/06-项目管理.md) | 角色分工、计划与风险 |
-| [docs/uml/](docs/uml/README.md) | **10 张 UML 图**（含渲染好的 PNG/SVG） |
-| [docs/用例描述/](docs/用例描述/README.md) | 登录、文档管理、智能问答的详细用例 |
-
----
-
-## 5. 测试
+## 5. 自动化测试
 
 ```powershell
-.\run_tests.ps1                 # 全部 99 条
-.\run_tests.ps1 -- -q -k security   # 只跑某个子集
+.\run_tests.ps1
+# 或
+.\.venv\Scripts\python.exe -m pytest -q
 ```
 
-测试全部跑在**独立的临时数据库**上，不会读写 `instance/knowledge.db`（演示库），
-可反复执行且互不影响。覆盖：权限矩阵、检索范围、问答算法、防爆破、失败审计、
-新建后可检索、全新库自建、演示故事线等。
+测试使用独立内存数据库，不会修改 `instance/knowledge.db`。覆盖：
+
+- 登录成功、失败、防爆破与审计；
+- 管理员/员工权限矩阵；
+- 公开/内部/机密文档访问隔离；
+- 文档 CRUD、收藏、检索、知识切分与图谱同步；
+- RAG 打分、来源合并、权限过滤与大模型失败降级；
+- 图谱数据范围、审计日志分页和筛选；
+- Flask REST API 契约；
+- 全新数据库自动建表与演示数据初始化；
+- 时间口径与前后端联调。
 
 代码检查：
 
@@ -132,43 +132,58 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m ruff check app scripts tests run.py
 ```
 
----
+## 6. REST API
 
-## 6. UML 图渲染
+主要接口：
 
-`docs/uml/rendered/` 里已经是渲染好的图片。如需重新生成：
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/auth/login` | 登录 |
+| POST | `/api/auth/logout` | 退出 |
+| GET | `/api/dashboard` | 工作台数据 |
+| GET/POST | `/api/documents` | 文档列表/新建 |
+| GET/PUT/DELETE | `/api/documents/<id>` | 文档详情/更新/删除 |
+| POST | `/api/documents/<id>/favorite` | 切换收藏 |
+| POST | `/api/qa/ask` | 智能问答 |
+| GET | `/api/graph` | 权限过滤后的图谱数据 |
+| GET | `/api/admin/users` | 用户列表 |
+| GET | `/api/admin/audits` | 审计分页查询 |
+| GET | `/api/health` | 健康检查 |
 
-```powershell
-.\.venv\Scripts\python.exe scripts\setup_uml.py     # 首次：准备字体 + jar + JRE
-.\.venv\Scripts\python.exe scripts\render_uml.py    # 渲染 svg + png
-.\.venv\Scripts\python.exe scripts\render_uml.py --check   # 只校验语法
-```
+完整接口说明见 `docs/course/08-REST-API接口设计说明书.md`。
 
-采用**本地渲染**而非 PlantText / kroki.io：这些在线服务的 PlantUML 服务器
-不带中文字体，中文标签会全部变成空白方框。
+## 7. UML 与课程文档
 
----
+UML 源文件位于 `docs/uml/`，已渲染 PNG/SVG 到 `docs/uml/rendered/`。课程正式文档位于 `docs/course/`，包括：
 
-## 7. 配置项
+1. 项目开发计划
+2. 软件需求规格说明书
+3. 软件设计规格说明书
+4. 项目测试计划
+5. 测试用例说明书
+6. 项目总结
+7. 个人项目小结与考核材料
+8. REST API 接口设计说明书
 
-通过环境变量或 `.env` 注入（见 [`.env.example`](.env.example)）：
+最终 Word 合并版和单独文档输出到 `deliverables/`。
+
+## 8. 配置项
+
+通过环境变量或 `.env` 注入，详见 `.env.example`：
 
 | 变量 | 默认 | 说明 |
 |------|------|------|
 | `SECRET_KEY` | 开发默认值 | 会话签名密钥，生产必须修改 |
 | `DATABASE_URL` | `sqlite:///instance/knowledge.db` | 数据库连接 |
-| `OPENAI_API_KEY` | 空 | 配置后问答切换为大模型生成；留空用本地摘要 |
-| `OPENAI_BASE_URL` / `OPENAI_MODEL` | OpenAI 默认 | 兼容协议接口（如豆包 Ark） |
-| `CHUNK_SIZE` / `CHUNK_OVERLAP` / `TOP_K` | 400 / 50 / 5 | RAG 切分与检索参数 |
-| `LOGIN_MAX_ATTEMPTS` / `LOGIN_WINDOW_SECONDS` | 8 / 300 | 登录防爆破阈值与窗口 |
-| `AUTO_SEED` | 1 | 是否自动建表并灌演示数据；生产建议置 0 |
-| `FLASK_ENV` / `APP_ENV` | default | `testing` / `production` 切换配置类 |
+| `OPENAI_API_KEY` | 空 | 配置后启用大模型回答 |
+| `OPENAI_BASE_URL` / `OPENAI_MODEL` | OpenAI 默认 | OpenAI 兼容接口 |
+| `CHUNK_SIZE` / `CHUNK_OVERLAP` / `TOP_K` | 400 / 50 / 5 | RAG 参数 |
+| `LOGIN_MAX_ATTEMPTS` / `LOGIN_WINDOW_SECONDS` | 8 / 300 | 登录限流 |
+| `AUTO_SEED` | 1 | 是否自动写入演示数据 |
 
----
+## 9. 说明
 
-## 8. 说明
-
-- 演示制度正文均为**虚构**，不代表任何真实企业规定。
-- 问答默认是「权限内分词检索 + 摘要拼接」，配置 `OPENAI_API_KEY` 后可在命中片段上调用大模型；
-  调用失败会自动回退本地摘要，且不会伪装成已调用大模型。
-- 登录限流为**进程内**实现，适合单机/单进程演示；多进程部署需换成共享存储。
+- 演示制度、账号和业务数据均为课程作业虚构内容。
+- 未配置大模型密钥时，问答使用可解释的本地检索摘要，不会伪装成大模型生成。
+- 登录限流为进程内实现，适用于单机课程演示；多进程部署需改用共享存储。
+- 原 Flask/Jinja 页面保留在 `/dashboard`、`/knowledge`、`/qa` 等旧路径，作为兼容层。

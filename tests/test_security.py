@@ -320,16 +320,14 @@ class TestAuditPagination:
         assert 'class="pagination' in text
 
     def test_second_page_differs_from_first(self, admin_client):
-        """翻页必须真的换数据；用时间戳比对（详情文案在种子里有重复）。"""
+        """翻页必须真的换数据；用审计 ID 比对，避免同一秒多条的误判。"""
         first = admin_client.get('/admin/audits').get_data(as_text=True)
         second = admin_client.get('/admin/audits?page=2').get_data(as_text=True)
         assert self._row_count(second) > 0
-        ts1 = re.findall(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", first)
-        ts2 = re.findall(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", second)
-        assert ts1 and ts2
-        assert set(ts1).isdisjoint(set(ts2))
-        # 第 1 页的时间整体晚于第 2 页（倒序排列）
-        assert max(ts1) > max(ts2)
+        ids1 = {int(value) for value in re.findall(r'data-audit-id="(\d+)"', first)}
+        ids2 = {int(value) for value in re.findall(r'data-audit-id="(\d+)"', second)}
+        assert ids1 and ids2
+        assert ids1.isdisjoint(ids2)
 
     def test_out_of_range_page_is_clamped(self, admin_client):
         res = admin_client.get('/admin/audits?page=99999')

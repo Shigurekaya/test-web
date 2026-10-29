@@ -24,3 +24,9 @@ htmlcov/
 .tools/plantuml/*.jar
 .tools/fonts/*.ttf
 .cache/
+
+# Vue frontend dependencies and local QA artifacts
+frontend/node_modules/
+frontend/.vite/
+.codex-tmp/
+docs/render/

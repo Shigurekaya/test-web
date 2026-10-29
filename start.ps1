@@ -24,6 +24,26 @@ if (-not (Test-Path $Python)) {
 
 New-Item -ItemType Directory -Force -Path $InstanceDir | Out-Null
 
+$FrontendDir = Join-Path $Root "frontend"
+$DistIndex = Join-Path $FrontendDir "dist\index.html"
+if (-not (Test-Path $DistIndex)) {
+    $Npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
+    if ($null -eq $Npm) {
+        Write-Host "[ERROR] frontend/dist is missing and npm is unavailable. Install Node.js 18+ and run: cd frontend; npm install; npm run build" -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "[INFO] Building Vue frontend..." -ForegroundColor Cyan
+    Push-Location $FrontendDir
+    try {
+        & $Npm.Source install
+        if ($LASTEXITCODE -ne 0) { throw "npm install failed" }
+        & $Npm.Source run build
+        if ($LASTEXITCODE -ne 0) { throw "npm run build failed" }
+    } finally {
+        Pop-Location
+    }
+}
+
 function Test-PortInUse([int]$ListenPort) {
     $conn = Get-NetTCPConnection -LocalPort $ListenPort -State Listen -ErrorAction SilentlyContinue
     return $null -ne $conn
@@ -61,7 +81,7 @@ $OutLog = Join-Path $InstanceDir "server.out.log"
 $ErrLog = Join-Path $InstanceDir "server.err.log"
 
 Write-Host "Starting knowledge service..." -ForegroundColor Cyan
-Write-Host "  URL : http://${BindHost}:$Port"
+Write-Host "  URL : http://${BindHost}:$Port/ui/"
 Write-Host "  Log : $OutLog / $ErrLog"
 
 $proc = Start-Process -FilePath $Python `
@@ -95,5 +115,5 @@ if (-not $ready) {
 }
 
 Write-Host "[OK] Started PID=$($proc.Id)" -ForegroundColor Green
-Write-Host "Open: http://${BindHost}:$Port"
+Write-Host "Open: http://${BindHost}:$Port/ui/"
 Write-Host "Stop: .\stop.ps1"

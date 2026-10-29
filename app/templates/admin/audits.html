@@ -55,7 +55,7 @@
       </thead>
       <tbody>
         {% for log in logs %}
-        <tr data-user="{{ log.user.username if log.user else '' }}" data-action="{{ log.action|action_label }}" data-detail="{{ log.detail }}">
+        <tr data-audit-id="{{ log.id }}" data-user="{{ log.user.username if log.user else '' }}" data-action="{{ log.action|action_label }}" data-detail="{{ log.detail }}">
           <td class="small text-muted">{{ log.created_at|dt }}</td>
           <td>{{ log.user.username if log.user else '—' }}</td>
           <td><span class="badge text-bg-secondary">{{ log.action|action_label }}</span></td>

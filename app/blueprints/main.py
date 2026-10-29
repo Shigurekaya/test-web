@@ -36,6 +36,12 @@ def index():
     from flask import redirect, url_for
     from flask_login import current_user as cu
 
+    # The Vue application is the primary delivery surface. Legacy pages remain
+    # available under their original routes as a compatibility layer.
+    from app.spa import DIST_DIR
+
+    if (DIST_DIR / "index.html").exists():
+        return redirect("/ui/")
     if cu.is_authenticated:
         return redirect(url_for("main.dashboard"))
     return render_template("main/index.html")

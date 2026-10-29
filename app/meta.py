@@ -2,10 +2,10 @@
 
 APP_NAME = "智慧企业知识财富库"
 APP_NAME_EN = "Enterprise Knowledge Wealth Base"
-APP_VERSION = "1.2"
+APP_VERSION = "2.0"
 COURSE_NAME = "智慧企业知识财富库"
 TAGLINE = "企业知识管理 · 检索问答 · 关系图"
-TECH_STACK = "Python · Flask · SQLAlchemy · SQLite · Bootstrap · ECharts · jieba"
+TECH_STACK = "Vue 3 · Vite · Flask REST API · SQLAlchemy · SQLite · ECharts · jieba"
 FEATURES = (
     "按部门与密级管控的制度/手册归档",
     "标题与正文全文检索",

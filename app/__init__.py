@@ -25,6 +25,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     app.config["APP_NAME"] = meta.APP_NAME
     app.config["APP_VERSION"] = meta.APP_VERSION
+    app.json.ensure_ascii = False
     # 须在注册蓝图前设置，否则已创建的 Rule 仍按默认严格斜杠匹配
     app.url_map.strict_slashes = False
 
@@ -83,6 +84,7 @@ def create_app(config_class=Config):
     def server_error(e):
         return render_template("errors/500.html"), 500
 
+    from app.api import bp as api_bp
     from app.blueprints.admin import bp as admin_bp
     from app.blueprints.auth import bp as auth_bp
     from app.blueprints.auth import configure_login_limits
@@ -90,6 +92,7 @@ def create_app(config_class=Config):
     from app.blueprints.knowledge import bp as knowledge_bp
     from app.blueprints.main import bp as main_bp
     from app.blueprints.qa import bp as qa_bp
+    from app.spa import bp as spa_bp
 
     app.register_blueprint(auth_bp)
     configure_login_limits(app)
@@ -98,6 +101,8 @@ def create_app(config_class=Config):
     app.register_blueprint(qa_bp)
     app.register_blueprint(graph_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(api_bp)
+    app.register_blueprint(spa_bp)
 
     with app.app_context():
         seed_all(app)

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request
 
 from app import meta
-from app.config import Config
+from app.config import config_by_name, resolve_config_name
 from app.extensions import db, login_manager
 from app.models import User
 from app.seed import seed_all
@@ -19,8 +19,10 @@ from app.utils import (
 )
 
 
-def create_app(config_class=Config):
+def create_app(config_class=None):
     load_dotenv()
+    if config_class is None:
+        config_class = config_by_name[resolve_config_name()]
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
     config_class.init_app(app)

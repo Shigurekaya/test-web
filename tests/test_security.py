@@ -2,6 +2,7 @@
 
 这些是系统的安全边界（SR-AUTH-005/006、SR-QA-008），单独成文件以便回归时优先查看。
 """
+
 from __future__ import annotations
 
 import re
@@ -244,6 +245,7 @@ class TestDepartments:
         assert len(DEPARTMENTS) >= 5
         assert len(set(DEPARTMENTS)) == len(DEPARTMENTS)
 
+
 class TestAboutStatsScope:
     """关于页统计必须跟随用户可见范围，避免用数字泄露机密规模。"""
 
@@ -277,9 +279,7 @@ class TestAboutStatsScope:
 
         def counts(text):
             docs = int(re.search(r"知识文档</span><strong>(\d+)</strong>", text).group(1))
-            chunks = int(
-                re.search(r"检索用知识片段</span><strong>(\d+)</strong>", text).group(1)
-            )
+            chunks = int(re.search(r"检索用知识片段</span><strong>(\d+)</strong>", text).group(1))
             return docs, chunks
 
         client.post("/auth/login", data={"username": "hr", "password": "hr123"})
@@ -295,6 +295,7 @@ class TestAboutStatsScope:
         text = self._visible_stats(client)
         n = int(re.search(r"问答记录</span><strong>(\d+)</strong>", text).group(1))
         assert n >= 1
+
 
 class TestAuditPagination:
     """审计页改为服务端分页与筛选：页面不再一次渲染 200 行。"""
@@ -312,17 +313,17 @@ class TestAuditPagination:
 
     @staticmethod
     def _row_count(text):
-        return text.count('data-detail')
+        return text.count("data-detail")
 
     def test_page_is_capped(self, admin_client):
-        text = admin_client.get('/admin/audits').get_data(as_text=True)
+        text = admin_client.get("/admin/audits").get_data(as_text=True)
         assert self._row_count(text) <= 25
         assert 'class="pagination' in text
 
     def test_second_page_differs_from_first(self, admin_client):
         """翻页必须真的换数据；用审计 ID 比对，避免同一秒多条的误判。"""
-        first = admin_client.get('/admin/audits').get_data(as_text=True)
-        second = admin_client.get('/admin/audits?page=2').get_data(as_text=True)
+        first = admin_client.get("/admin/audits").get_data(as_text=True)
+        second = admin_client.get("/admin/audits?page=2").get_data(as_text=True)
         assert self._row_count(second) > 0
         ids1 = {int(value) for value in re.findall(r'data-audit-id="(\d+)"', first)}
         ids2 = {int(value) for value in re.findall(r'data-audit-id="(\d+)"', second)}
@@ -330,49 +331,45 @@ class TestAuditPagination:
         assert ids1.isdisjoint(ids2)
 
     def test_out_of_range_page_is_clamped(self, admin_client):
-        res = admin_client.get('/admin/audits?page=99999')
+        res = admin_client.get("/admin/audits?page=99999")
         assert res.status_code == 200
 
     def test_action_filter_narrows_results(self, client, app):
         """先制造一条失败登录，再按动作筛选。"""
-        client.post('/auth/login', data={'username': 'ghost_user', 'password': 'x'})
-        client.post('/auth/login', data={'username': 'admin', 'password': 'admin123'})
+        client.post("/auth/login", data={"username": "ghost_user", "password": "x"})
+        client.post("/auth/login", data={"username": "admin", "password": "admin123"})
 
-        text = client.get('/admin/audits?action=login_failed').get_data(as_text=True)
+        text = client.get("/admin/audits?action=login_failed").get_data(as_text=True)
         assert self._row_count(text) >= 1
-        assert '登录失败' in text
-        assert '筛选出' in text
+        assert "登录失败" in text
+        assert "筛选出" in text
 
     def test_unknown_action_is_ignored(self, admin_client):
         """非法动作值不应筛出空集（当作未筛选处理）。"""
-        text = admin_client.get('/admin/audits?action=not_a_real_action').get_data(as_text=True)
+        text = admin_client.get("/admin/audits?action=not_a_real_action").get_data(as_text=True)
         assert self._row_count(text) > 0
 
     def test_user_filter_narrows_results(self, admin_client, app):
         from app.models import AuditLog
 
         with app.app_context():
-            sample = (
-                AuditLog.query.join(AuditLog.user)
-                .filter(User.username == 'tech_xu')
-                .count()
-            )
+            sample = AuditLog.query.join(AuditLog.user).filter(User.username == "tech_xu").count()
         if sample == 0:
-            pytest.skip('种子数据中没有 tech_xu 的审计记录')
-        text = admin_client.get('/admin/audits?user=tech_xu').get_data(as_text=True)
+            pytest.skip("种子数据中没有 tech_xu 的审计记录")
+        text = admin_client.get("/admin/audits?user=tech_xu").get_data(as_text=True)
         assert 0 < self._row_count(text) <= sample
 
     def test_detail_filter_uses_substring(self, admin_client, app):
         from app.models import AuditLog
 
         with app.app_context():
-            row = AuditLog.query.filter(AuditLog.detail.like('%休假%')).first()
+            row = AuditLog.query.filter(AuditLog.detail.like("%休假%")).first()
         if row is None:
-            pytest.skip('种子数据中没有含「休假」的审计明细')
-        text = admin_client.get('/admin/audits?detail=' + quote('休假')).get_data(as_text=True)
+            pytest.skip("种子数据中没有含「休假」的审计明细")
+        text = admin_client.get("/admin/audits?detail=" + quote("休假")).get_data(as_text=True)
         assert self._row_count(text) >= 1
 
     def test_pagination_preserves_active_filters(self, admin_client):
         """翻页链接必须带上当前筛选条件，否则第 2 页会丢掉筛选。"""
-        text = admin_client.get('/admin/audits?action=login').get_data(as_text=True)
-        assert 'action=login' in text
+        text = admin_client.get("/admin/audits?action=login").get_data(as_text=True)
+        assert "action=login" in text

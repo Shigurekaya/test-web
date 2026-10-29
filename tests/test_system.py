@@ -2,6 +2,7 @@
 
 所有用例运行在独立数据库上（见 conftest.py），不会读写 `instance/knowledge.db`。
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,6 +15,9 @@ def test_01_health(client):
     res = client.get("/health")
     assert res.status_code == 200
     assert res.get_json()["status"] == "ok"
+    assert res.headers["X-Content-Type-Options"] == "nosniff"
+    assert res.headers["X-Frame-Options"] == "DENY"
+    assert res.headers["Referrer-Policy"] == "strict-origin-when-cross-origin"
 
 
 def test_02_login_fail(client):
@@ -25,7 +29,13 @@ def test_02_login_fail(client):
 
 
 def test_03_login_success_dashboard(admin_client):
-    assert admin_client.get("/dashboard").status_code == 200
+    page = admin_client.get("/dashboard")
+    assert page.status_code == 200
+    html = page.get_data(as_text=True)
+    assert "/static/vendor/bootstrap/bootstrap.min.css" in html
+    assert "cdn.jsdelivr.net" not in html
+    asset = admin_client.get("/static/vendor/bootstrap/bootstrap.min.css")
+    assert asset.status_code == 200
 
 
 def test_04_search_leave_policy(admin_client):
@@ -62,6 +72,13 @@ def test_08_graph_data(admin_client):
     payload = res.get_json()
     assert len(payload["nodes"]) >= 1
     assert len(payload["links"]) >= 1
+
+    page = admin_client.get("/graph/")
+    assert page.status_code == 200
+    assert "/static/vendor/echarts.min.js" in page.get_data(as_text=True)
+    asset = admin_client.get("/static/vendor/echarts.min.js")
+    assert asset.status_code == 200
+    assert b"Licensed to the Apache Software Foundation" in asset.data[:2000]
 
 
 def test_09_create_document_and_index(admin_client):
@@ -156,6 +173,7 @@ def test_18_non_admin_gets_403_on_admin(client):
 
 # --- 可靠性：全新数据库可自动建表并灌入演示数据 ---
 
+
 def test_19_fresh_database_builds_and_seeds(fresh_client, fresh_app):
     from app.models import (
         AuditLog,
@@ -185,9 +203,13 @@ def test_20_demo_storyline_smoke(fresh_client):
     fresh_client.post("/auth/login", data={"username": "admin", "password": "admin123"})
     for path in ("/dashboard", "/knowledge/", "/qa/", "/graph/", "/about"):
         assert fresh_client.get(path).status_code == 200, path
-    assert fresh_client.post(
-        "/qa/", data={"question": "员工年假有几天？"}, follow_redirects=True
-    ).status_code == 200
+    assert (
+        fresh_client.post(
+            "/qa/", data={"question": "员工年假有几天？"}, follow_redirects=True
+        ).status_code
+        == 200
+    )
+
 
 class TestTimestampConsistency:
     """新写入的记录与演示历史必须同一时间口径，否则界面顺序看起来是乱的。

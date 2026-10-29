@@ -1,4 +1,5 @@
 """文档切分、关键词提取、检索与问答（轻量 RAG）。"""
+
 from __future__ import annotations
 
 import json
@@ -307,10 +308,7 @@ def group_hits_by_document(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def build_local_answer(question: str, hits: list[dict[str, Any]]) -> str:
     if not hits:
-        return (
-            "未在可访问的知识库中检索到相关内容。"
-            "请换个问法，或确认文档已发布且您有权限查看。"
-        )
+        return "未在可访问的知识库中检索到相关内容。请换个问法，或确认文档已发布且您有权限查看。"
     lines = [
         f"根据企业知识库检索，针对「{question}」整理如下：",
         "",

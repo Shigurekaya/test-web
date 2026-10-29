@@ -46,14 +46,15 @@ def login():
             login_limiter.clear_from_request()
             login_user(user)
             db.session.add(
-                AuditLog(user_id=user.id, action="login", detail=audit_detail("login", username=username))
+                AuditLog(
+                    user_id=user.id, action="login", detail=audit_detail("login", username=username)
+                )
             )
             db.session.commit()
             flash("登录成功", "success")
-            next_url = (
-                safe_next_url(request.form.get("next") or request.args.get("next"))
-                or url_for("main.dashboard")
-            )
+            next_url = safe_next_url(
+                request.form.get("next") or request.args.get("next")
+            ) or url_for("main.dashboard")
             return redirect(next_url)
 
         # 失败同样落审计：只看成功记录的审计日志看不出爆破

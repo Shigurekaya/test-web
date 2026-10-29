@@ -9,6 +9,7 @@ r"""把 docs/uml/*.puml 渲染成可嵌入文档的图片（本地离线渲染�
 
 渲染依赖见 scripts/plantuml_local.py；首次使用先跑 scripts/setup_uml.py 准备环境。
 """
+
 from __future__ import annotations
 
 import argparse

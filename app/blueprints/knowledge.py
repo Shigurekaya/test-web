@@ -38,7 +38,9 @@ def _apply_doc_form(doc: Document | None) -> Document:
     category_id = int(cat_raw) if str(cat_raw).isdigit() else None
     visibility = normalize_choice(request.form.get("visibility"), VISIBILITY_LABELS, "internal")
     status = normalize_choice(request.form.get("status"), STATUS_LABELS, "published")
-    department = request.form.get("department") or (doc.department if doc else current_user.department)
+    department = request.form.get("department") or (
+        doc.department if doc else current_user.department
+    )
     if department not in DEPARTMENTS:
         department = current_user.department
 
@@ -82,7 +84,10 @@ def list_docs():
     elif sort == "title":
         docs = sorted(docs, key=lambda d: d.title or "")
     elif sort == "department":
-        docs = sorted(docs, key=lambda d: (d.department or "", -(d.updated_at.timestamp() if d.updated_at else 0)))
+        docs = sorted(
+            docs,
+            key=lambda d: (d.department or "", -(d.updated_at.timestamp() if d.updated_at else 0)),
+        )
     else:
         docs = sorted(docs, key=lambda d: d.updated_at or now_naive(), reverse=True)
 
@@ -181,7 +186,11 @@ def create():
         )
         sync_document_graph(doc)
         db.session.add(
-            AuditLog(user_id=current_user.id, action="create_document", detail=audit_detail("create_document", doc_id=doc.id, title=doc.title))
+            AuditLog(
+                user_id=current_user.id,
+                action="create_document",
+                detail=audit_detail("create_document", doc_id=doc.id, title=doc.title),
+            )
         )
         db.session.commit()
         flash("文档已创建，并完成知识切分与图谱同步", "success")
@@ -225,7 +234,11 @@ def edit(doc_id: int):
         )
         sync_document_graph(doc)
         db.session.add(
-            AuditLog(user_id=current_user.id, action="edit_document", detail=audit_detail("edit_document", doc_id=doc.id, title=doc.title))
+            AuditLog(
+                user_id=current_user.id,
+                action="edit_document",
+                detail=audit_detail("edit_document", doc_id=doc.id, title=doc.title),
+            )
         )
         db.session.commit()
         flash("文档已更新", "success")
@@ -250,7 +263,11 @@ def delete(doc_id: int):
     remove_document_graph(doc)
     db.session.delete(doc)
     db.session.add(
-        AuditLog(user_id=current_user.id, action="delete_document", detail=audit_detail("delete_document", doc_id=doc.id, title=title))
+        AuditLog(
+            user_id=current_user.id,
+            action="delete_document",
+            detail=audit_detail("delete_document", doc_id=doc.id, title=title),
+        )
     )
     db.session.commit()
     flash("文档已删除", "info")
@@ -278,9 +295,7 @@ def toggle_favorite(doc_id: int):
 @login_required
 def favorites():
     items = (
-        Favorite.query.filter_by(user_id=current_user.id)
-        .order_by(Favorite.created_at.desc())
-        .all()
+        Favorite.query.filter_by(user_id=current_user.id).order_by(Favorite.created_at.desc()).all()
     )
     items = [i for i in items if i.document and can_view_document(current_user, i.document)]
     return render_template("knowledge/favorites.html", items=items)

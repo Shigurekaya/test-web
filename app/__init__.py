@@ -23,6 +23,7 @@ def create_app(config_class=Config):
     load_dotenv()
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_object(config_class)
+    config_class.init_app(app)
     app.config["APP_NAME"] = meta.APP_NAME
     app.config["APP_VERSION"] = meta.APP_VERSION
     app.json.ensure_ascii = False
@@ -38,6 +39,18 @@ def create_app(config_class=Config):
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
+
+    @app.after_request
+    def add_security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Permissions-Policy", "camera=(), geolocation=(), microphone=()"
+        )
+        if request.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+        return response
 
     @app.template_filter("dt")
     def dt_filter(value):

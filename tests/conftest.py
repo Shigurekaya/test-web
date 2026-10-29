@@ -5,6 +5,7 @@
 - 数据库结构在会话级创建一次，用例之间用事务回滚隔离，兼顾速度与洁净度；
 - 需要"全新建库"的用例可用 `fresh_app` 夹具按完整流程（含 seed）重建。
 """
+
 from __future__ import annotations
 
 import os
@@ -138,4 +139,3 @@ def db_counts(app):
         return {m.__name__: m.query.count() for m in models}
 
     return read
-

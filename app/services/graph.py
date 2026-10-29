@@ -1,4 +1,5 @@
 """简易知识图谱：根据文档元数据与标签自动/半自动建图。"""
+
 from __future__ import annotations
 
 from app.extensions import db
@@ -6,7 +7,9 @@ from app.models import Document, GraphEdge, GraphNode
 from app.services.rag import extract_keywords
 
 
-def get_or_create_node(name: str, node_type: str, description: str = "", document_id=None) -> GraphNode:
+def get_or_create_node(
+    name: str, node_type: str, description: str = "", document_id=None
+) -> GraphNode:
     node = GraphNode.query.filter_by(name=name).first()
     if node:
         if description and not node.description:
@@ -34,7 +37,9 @@ def ensure_edge(source: GraphNode, target: GraphNode, relation: str) -> None:
     db.session.add(GraphEdge(source_id=source.id, target_id=target.id, relation=relation))
 
 
-def remove_document_graph(doc: Document | None = None, *, document_id: int | None = None, title: str | None = None) -> None:
+def remove_document_graph(
+    doc: Document | None = None, *, document_id: int | None = None, title: str | None = None
+) -> None:
     """删除文档对应的图谱节点及其边，避免删文后残留孤点。"""
     doc_id = document_id if document_id is not None else (doc.id if doc else None)
     doc_title = title if title is not None else (doc.title if doc else None)

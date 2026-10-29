@@ -1,4 +1,5 @@
 """REST API contract tests used by the Vue frontend."""
+
 from __future__ import annotations
 
 from app.extensions import db
@@ -137,7 +138,13 @@ def test_api_graph_payload_is_visible_scope(admin_client):
     payload = response.get_json()
     assert payload["nodes"]
     assert payload["links"]
-    assert {node["category"] for node in payload["nodes"]} <= {"document", "department", "project", "keyword", "concept"}
+    assert {node["category"] for node in payload["nodes"]} <= {
+        "document",
+        "department",
+        "project",
+        "keyword",
+        "concept",
+    }
 
 
 def test_api_admin_endpoints_and_permission(client, admin_client):

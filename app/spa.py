@@ -1,4 +1,5 @@
 """Serve the production Vue build from /ui without interfering with legacy pages."""
+
 from pathlib import Path
 
 from flask import Blueprint, send_from_directory

@@ -16,8 +16,13 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script src="{{ url_for('static', filename='vendor/echarts.min.js') }}"></script>
 <script>
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, function (character) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+  });
+}
 async function renderGraph() {
   const res = await fetch("{{ url_for('graph.data') }}");
   const data = await res.json();
@@ -35,8 +40,8 @@ async function renderGraph() {
   chart.setOption({
     tooltip: {
       formatter: function (p) {
-        if (p.dataType === 'edge') return p.data.relation || '关联';
-        return p.data.name + '<br/>类型：' + (typeLabel[p.data.nodeType] || p.data.nodeType || '');
+        if (p.dataType === 'edge') return escapeHtml(p.data.relation || '关联');
+        return '<b>' + escapeHtml(p.data.name) + '</b><br/>类型：' + escapeHtml(typeLabel[p.data.nodeType] || p.data.nodeType || '');
       }
     },
     legend: [{ data: categories.map(c => c.name) }],

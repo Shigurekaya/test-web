@@ -2,6 +2,7 @@
 
 覆盖 SR-QA-* 的核心算法：切分、打分、权限过滤、来源去重与降级行为。
 """
+
 from __future__ import annotations
 
 from app.services.rag import (
@@ -129,25 +130,19 @@ class TestScoreChunk:
         """关键词命中（1.8/词）与标题命中（3.2/词）的相对关系可复现。"""
         kw_chunk = self._chunk(content="无关内容", title="无关标题", keywords="报销")
         plain_chunk = self._chunk(content="无关内容", title="无关标题", keywords="")
-        assert score_chunk("报销", {"报销"}, kw_chunk) > score_chunk(
-            "报销", {"报销"}, plain_chunk
-        )
+        assert score_chunk("报销", {"报销"}, kw_chunk) > score_chunk("报销", {"报销"}, plain_chunk)
 
     def test_exact_phrase_in_body_is_strongest_signal(self):
         """提问原串整段出现在正文里，应打赢仅有标题命中的情况。"""
         title_only = self._chunk("无关的正文内容", title="年假制度")
         phrase = self._chunk("文中写明年假天数如何计算", title="无关标题")
-        assert score_chunk("年假", {"年假"}, phrase) > score_chunk(
-            "年假", {"年假"}, title_only
-        )
+        assert score_chunk("年假", {"年假"}, phrase) > score_chunk("年假", {"年假"}, title_only)
 
     def test_keyword_weighting(self):
         q_tokens = {"年假"}
         with_kw = self._chunk("正文", keywords="年假")
         without_kw = self._chunk("正文", keywords="")
-        assert score_chunk("年假", q_tokens, with_kw) > score_chunk(
-            "年假", q_tokens, without_kw
-        )
+        assert score_chunk("年假", q_tokens, with_kw) > score_chunk("年假", q_tokens, without_kw)
 
     def test_exact_phrase_bonus(self):
         q_tokens = {"员工", "年假", "几天"}
@@ -207,22 +202,16 @@ class TestRetrieve:
             visibility="secret",
             department="信息部",
         )
-        secret_chunk_ids = {
-            c.id for c in KnowledgeChunk.query.filter_by(document_id=doc.id).all()
-        }
+        secret_chunk_ids = {c.id for c in KnowledgeChunk.query.filter_by(document_id=doc.id).all()}
 
-        outsider = type(
-            "U", (), {"is_admin": False, "department": "人事部", "id": 2}
-        )()
+        outsider = type("U", (), {"is_admin": False, "department": "人事部", "id": 2})()
         hits = retrieve("密钥轮换周期", outsider, top_k=10)
         returned_ids = {h["chunk_id"] for h in hits}
         assert not (returned_ids & secret_chunk_ids)
         assert doc.id not in {h["document_id"] for h in hits}
 
         # 同部门与管理员仍可检索到，证明过滤是可逆的权限规则而非一律屏蔽
-        insider = type(
-            "U", (), {"is_admin": False, "department": "信息部", "id": 3}
-        )()
+        insider = type("U", (), {"is_admin": False, "department": "信息部", "id": 3})()
         admin = type("U", (), {"is_admin": True, "department": "综合部", "id": 4})()
         for user in (insider, admin):
             got = retrieve("密钥轮换周期", user, top_k=10)
@@ -339,6 +328,7 @@ class TestAnonymousUser:
         anon = type("U", (), {"is_admin": False, "department": None, "id": None})()
         assert can_view_document(anon, doc) is True  # public 对登录用户开放
         assert can_view_document(None, doc) is False
+
 
 class TestGroupHitsByDocument:
     """检索依据按文档合并，避免同一篇文档渲染成多张重复卡片。"""

@@ -74,7 +74,9 @@ class Document(db.Model):
 
     category = db.relationship("Category", back_populates="documents")
     author = db.relationship("User", back_populates="documents")
-    chunks = db.relationship("KnowledgeChunk", back_populates="document", cascade="all, delete-orphan")
+    chunks = db.relationship(
+        "KnowledgeChunk", back_populates="document", cascade="all, delete-orphan"
+    )
     favorites = db.relationship("Favorite", back_populates="document", cascade="all, delete-orphan")
 
     @property

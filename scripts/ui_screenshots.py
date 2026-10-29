@@ -5,6 +5,7 @@ r"""用真实浏览器给每个页面截图，用于 UI 走查。
 脚本会自己起一个临时数据库 + 本地 Flask 服务，因此不会碰到 instance/knowledge.db。
 产物在 .cache/ui/。不属于测试套件，仅供人工检查界面与收集浏览器控制台报错。
 """
+
 from __future__ import annotations
 
 import os

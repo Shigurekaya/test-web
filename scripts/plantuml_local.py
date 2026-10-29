@@ -12,6 +12,7 @@ jar + 项目内置 Noto Sans SC 字体离线渲染，中文可正确显示。
     # 2) 渲染
     .\.venv\Scripts\python.exe scripts\render_uml.py
 """
+
 from __future__ import annotations
 
 import os
@@ -23,8 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 FONT_DIR = PROJECT_ROOT / ".tools" / "fonts"
 FONT_NAME = "NotoSansSC-VariableFont_wght.ttf"
 FONT_URL = (
-    "https://raw.githubusercontent.com/google/fonts/main/"
-    "ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf"
+    "https://raw.githubusercontent.com/google/fonts/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf"
 )
 JAR_CANDIDATES = (
     PROJECT_ROOT / ".tools" / "plantuml" / "plantuml.jar",

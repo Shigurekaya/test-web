@@ -6,6 +6,7 @@ import BaseChart from '../components/BaseChart.vue'
 import PageHeader from '../components/PageHeader.vue'
 import { api } from '../api/client'
 import { session } from '../stores/session'
+import { escapeHtml } from '../utils/html'
 import { toast } from '../stores/toast'
 
 const router = useRouter()
@@ -44,9 +45,9 @@ const graphOption = computed(() => ({
   tooltip: {
     formatter: (params) => {
       if (params.dataType === 'node') {
-        return `<b>${params.data.name}</b><br/>类型：${typeLabels[params.data.nodeType] || params.data.nodeType}`
+        return `<b>${escapeHtml(params.data.name)}</b><br/>类型：${escapeHtml(typeLabels[params.data.nodeType] || params.data.nodeType)}`
       }
-      return params.data.relation || '关联'
+      return escapeHtml(params.data.relation || '关联')
     }
   },
   legend: [{

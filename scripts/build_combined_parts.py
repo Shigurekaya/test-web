@@ -1,4 +1,5 @@
 """Build small part files and a master file for a unified Word report."""
+
 from __future__ import annotations
 
 import sys

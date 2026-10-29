@@ -4,6 +4,7 @@ Word's ``Document.WordOpenXML`` property exposes the current in-memory document
 as a complete Flat OPC package.  This converter repackages that XML without
 using Word's unreliable Save() path on large documents.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -16,6 +17,7 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 PKG_NS = "http://schemas.microsoft.com/office/2006/xmlPackage"
+
 
 def flat_opc_to_docx(source: Path, output: Path) -> tuple[int, int]:
     root = ET.parse(source).getroot()
@@ -56,7 +58,9 @@ def flat_opc_to_docx(source: Path, output: Path) -> tuple[int, int]:
     ).encode()
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    handle, temp_name = tempfile.mkstemp(prefix=f".{output.stem}-", suffix=".docx", dir=output.parent)
+    handle, temp_name = tempfile.mkstemp(
+        prefix=f".{output.stem}-", suffix=".docx", dir=output.parent
+    )
     os.close(handle)
     temp_path = Path(temp_name)
     try:

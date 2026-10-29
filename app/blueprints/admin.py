@@ -16,7 +16,9 @@ def users():
     users = User.query.order_by(User.id).all()
     doc_counts = Counter(
         row[0]
-        for row in Document.query.with_entities(Document.author_id).filter(Document.author_id.isnot(None)).all()
+        for row in Document.query.with_entities(Document.author_id)
+        .filter(Document.author_id.isnot(None))
+        .all()
     )
     admin_count = sum(1 for u in users if u.role == "admin")
     employee_count = len(users) - admin_count

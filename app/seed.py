@@ -1,4 +1,5 @@
 """初始化 / 增量补充演示数据（展示站用，虚构数据，勿当真实业务）。"""
+
 from __future__ import annotations
 
 import json
@@ -992,7 +993,12 @@ def _seed_activity(admin: User, app):
 
     # 收藏：管理员 + 若干员工各收藏几篇
     fav_targets = {
-        "admin": ["智慧知识库建设指引", "信息安全分级与访问控制规范", "项目里程碑与周报模板", "API 网关限流与密钥轮换规范"],
+        "admin": [
+            "智慧知识库建设指引",
+            "信息安全分级与访问控制规范",
+            "项目里程碑与周报模板",
+            "API 网关限流与密钥轮换规范",
+        ],
         "hr": ["员工年休假管理办法", "绩效考核与目标管理说明", "新员工入职培训手册"],
         "ops_liu": ["线索跟进与商机阶段定义", "客成交接与续费预警机制", "客服值班排班与升级矩阵"],
         "tech_gao": ["代码评审与发布窗口约定", "数据备份与灾难恢复演练计划"],
@@ -1029,7 +1035,9 @@ def _seed_activity(admin: User, app):
                         "score": round(0.72 + (i % 5) * 0.04, 2),
                     }
                 ]
-            created = base + timedelta(days=rng.randint(0, 26), hours=rng.randint(0, 10), minutes=rng.randint(0, 50))
+            created = base + timedelta(
+                days=rng.randint(0, 26), hours=rng.randint(0, 10), minutes=rng.randint(0, 50)
+            )
             db.session.add(
                 QAHistory(
                     user_id=asker.id,
@@ -1045,9 +1053,15 @@ def _seed_activity(admin: User, app):
             ("年假能跨年吗？", "原则上不跨年累计，确因工作原因未休完的可延期至次年3月31日前使用。"),
             ("会议室最长约多久？", "单次最长2小时；跨半天需部门负责人批准。"),
             ("产品B v2.3 有什么新功能？", "新增知识库问答入口、机密可见性、按部门导出报表等。"),
-            ("客服投诉怎么升级？", "先致歉复述；当场不能解决则建单并明确时限；资金纠纷须升级主管。"),
+            (
+                "客服投诉怎么升级？",
+                "先致歉复述；当场不能解决则建单并明确时限；资金纠纷须升级主管。",
+            ),
             ("预算超支怎么办？", "须走追加申请，禁止先斩后奏；季度滚动预测偏差超10%需说明。"),
-            ("个人信息能不能截图发群？", "日志与截图中的手机号、证件号须打码；对外提供须协议与评估。"),
+            (
+                "个人信息能不能截图发群？",
+                "日志与截图中的手机号、证件号须打码；对外提供须协议与评估。",
+            ),
             ("固定资产什么时候盘点？", "每年11月盘点；账实不符须当周完成差异说明。"),
             ("P0 需求怎么定义？", "故障或合规类为 P0；影响营收为 P1；体验优化 P2；探索项 P3。"),
         ]
@@ -1082,7 +1096,9 @@ def _seed_activity(admin: User, app):
                 detail = audit_detail("ask_qa", question=DEMO_QA[i % len(DEMO_QA)][0])
             else:
                 detail = audit_detail(action, username=u.username)
-            created = base + timedelta(days=rng.randint(0, 27), hours=rng.randint(0, 23), minutes=rng.randint(0, 59))
+            created = base + timedelta(
+                days=rng.randint(0, 27), hours=rng.randint(0, 23), minutes=rng.randint(0, 59)
+            )
             db.session.add(
                 AuditLog(
                     user_id=u.id,

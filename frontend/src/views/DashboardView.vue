@@ -7,6 +7,7 @@ import PageHeader from '../components/PageHeader.vue'
 import StatCard from '../components/StatCard.vue'
 import { api } from '../api/client'
 import { session } from '../stores/session'
+import { escapeHtml } from '../utils/html'
 import { toast } from '../stores/toast'
 
 const router = useRouter()
@@ -49,7 +50,10 @@ const deptOption = computed(() => ({
 }))
 
 const categoryOption = computed(() => ({
-  tooltip: { trigger: 'item', formatter: '{b}<br/>{c} 篇（{d}%）' },
+  tooltip: {
+    trigger: 'item',
+    formatter: (params) => `${escapeHtml(params.name)}<br/>${params.value} 篇（${params.percent}%）`
+  },
   legend: {
     orient: 'vertical',
     right: 0,

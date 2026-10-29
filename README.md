@@ -152,7 +152,7 @@ npm run dev
 .\.venv\Scripts\python.exe -m ruff check app scripts tests run.py
 ```
 
-GitHub Actions 会同时执行 Ruff、133 条 pytest 和 Vue 生产构建，避免只通过后端检查却遗漏前端编译问题。
+GitHub Actions 会同时执行 Ruff 检查与格式校验、133 条 pytest、前端生产依赖审计和 Vue 构建，避免只通过后端检查却遗漏前端编译或依赖安全问题。
 
 ## 6. REST API
 

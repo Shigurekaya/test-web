@@ -2,6 +2,7 @@
 
 对应安全需求 SR-AUTH-*：密码不可明文存储、登录失败可追溯、防爆破。
 """
+
 from __future__ import annotations
 
 import pytest
@@ -75,13 +76,9 @@ class TestLoginBruteForce:
         login_limiter.max_attempts = 5
         try:
             for _ in range(5):
-                res = client.post(
-                    "/auth/login", data={"username": "admin", "password": "wrong"}
-                )
+                res = client.post("/auth/login", data={"username": "admin", "password": "wrong"})
                 assert res.status_code == 200
-            res = client.post(
-                "/auth/login", data={"username": "admin", "password": "wrong"}
-            )
+            res = client.post("/auth/login", data={"username": "admin", "password": "wrong"})
             assert res.status_code == 429
             assert "登录失败次数过多".encode() in res.data
         finally:
@@ -111,9 +108,7 @@ class TestLoginBruteForce:
         login_limiter.max_attempts = 4
         try:
             for _ in range(3):
-                res = client.post(
-                    "/auth/login", data={"username": "admin", "password": "no"}
-                )
+                res = client.post("/auth/login", data={"username": "admin", "password": "no"})
                 assert res.status_code == 200
 
             # 用对密码登录一次；紧接着立刻退出，让计数被清掉
@@ -126,21 +121,15 @@ class TestLoginBruteForce:
 
             # 清零后再来 3 次失败，还没到阈值 4，因此不会被锁
             for _ in range(3):
-                res = client.post(
-                    "/auth/login", data={"username": "admin", "password": "no"}
-                )
+                res = client.post("/auth/login", data={"username": "admin", "password": "no"})
                 assert res.status_code == 200
 
             # 第 4 次失败把计数顶到阈值，同一次请求照常返回登录页；
             # 下一次请求才会看到锁定（锁定判定发生在密码校验之前）。
-            res = client.post(
-                "/auth/login", data={"username": "admin", "password": "no"}
-            )
+            res = client.post("/auth/login", data={"username": "admin", "password": "no"})
             assert res.status_code == 200
 
-            res = client.post(
-                "/auth/login", data={"username": "admin", "password": "no"}
-            )
+            res = client.post("/auth/login", data={"username": "admin", "password": "no"})
             assert res.status_code == 429
         finally:
             login_limiter.max_attempts = original
@@ -182,13 +171,17 @@ class TestPasswordStorage:
             assert user.check_password("admin123") is True
             assert user.check_password("admin1234") is False
 
+
 class TestAuditDetailFormat:
     """审计明细统一由 audit_detail 拼装，避免各处格式漂移。"""
 
     def test_document_actions_include_id_and_title(self):
         from app.utils import audit_detail
 
-        assert audit_detail("view_document", doc_id=17, title="年假办法") == "查看文档 #17 《年假办法》"
+        assert (
+            audit_detail("view_document", doc_id=17, title="年假办法")
+            == "查看文档 #17 《年假办法》"
+        )
         assert audit_detail("edit_document", doc_id=3) == "编辑文档 #3"
 
     def test_question_is_truncated(self):

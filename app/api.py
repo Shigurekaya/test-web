@@ -3,6 +3,7 @@
 The legacy server-rendered pages remain available, while this module provides a
 stable frontend/backend boundary for the separated Vue application.
 """
+
 from __future__ import annotations
 
 import json
@@ -139,7 +140,9 @@ def _user_payload(user: User) -> dict:
     }
 
 
-def _doc_payload(doc: Document, *, include_content: bool = False, is_favorite: bool = False) -> dict:
+def _doc_payload(
+    doc: Document, *, include_content: bool = False, is_favorite: bool = False
+) -> dict:
     payload = {
         "id": doc.id,
         "title": doc.title,
@@ -215,7 +218,9 @@ def health():
         ok = True
     except Exception:  # noqa: BLE001
         ok = False
-    return jsonify({"status": "ok" if ok else "degraded", "database": ok, "version": meta.APP_VERSION})
+    return jsonify(
+        {"status": "ok" if ok else "degraded", "database": ok, "version": meta.APP_VERSION}
+    )
 
 
 @bp.get("/meta")
@@ -245,7 +250,12 @@ def login():
     if login_limiter.is_locked_from_request():
         retry_after = login_limiter.retry_after_from_request()
         return (
-            jsonify({"error": f"登录失败次数过多，请 {retry_after} 秒后再试", "retry_after": retry_after}),
+            jsonify(
+                {
+                    "error": f"登录失败次数过多，请 {retry_after} 秒后再试",
+                    "retry_after": retry_after,
+                }
+            ),
             429,
         )
 
@@ -269,7 +279,9 @@ def login():
     login_limiter.clear_from_request()
     login_user(user, remember=bool(data.get("remember")))
     db.session.add(
-        AuditLog(user_id=user.id, action="login", detail=audit_detail("login", username=user.username))
+        AuditLog(
+            user_id=user.id, action="login", detail=audit_detail("login", username=user.username)
+        )
     )
     db.session.commit()
     return jsonify({"user": _user_payload(user), "message": "登录成功"})
@@ -293,7 +305,9 @@ def me():
 def logout():
     user = current_user
     db.session.add(
-        AuditLog(user_id=user.id, action="logout", detail=audit_detail("logout", username=user.username))
+        AuditLog(
+            user_id=user.id, action="logout", detail=audit_detail("logout", username=user.username)
+        )
     )
     db.session.commit()
     logout_user()
@@ -351,11 +365,15 @@ def dashboard():
             "charts": {
                 "departments": [
                     {"name": name, "value": count}
-                    for name, count in sorted(dept_counter.items(), key=lambda item: (-item[1], item[0]))
+                    for name, count in sorted(
+                        dept_counter.items(), key=lambda item: (-item[1], item[0])
+                    )
                 ],
                 "categories": [
                     {"name": name, "value": count}
-                    for name, count in sorted(cat_counter.items(), key=lambda item: (-item[1], item[0]))[:8]
+                    for name, count in sorted(
+                        cat_counter.items(), key=lambda item: (-item[1], item[0])
+                    )[:8]
                 ],
             },
             "recent_documents": recent_docs,
@@ -390,7 +408,13 @@ def list_documents():
     elif sort == "title":
         docs = sorted(docs, key=lambda doc: doc.title or "")
     elif sort == "department":
-        docs = sorted(docs, key=lambda doc: (doc.department or "", -(doc.updated_at.timestamp() if doc.updated_at else 0)))
+        docs = sorted(
+            docs,
+            key=lambda doc: (
+                doc.department or "",
+                -(doc.updated_at.timestamp() if doc.updated_at else 0),
+            ),
+        )
     else:
         docs = sorted(docs, key=lambda doc: doc.updated_at or now_naive(), reverse=True)
 
@@ -431,9 +455,7 @@ def list_documents():
 @api_login_required
 def favorite_documents():
     items = (
-        Favorite.query.filter_by(user_id=current_user.id)
-        .order_by(Favorite.created_at.desc())
-        .all()
+        Favorite.query.filter_by(user_id=current_user.id).order_by(Favorite.created_at.desc()).all()
     )
     return jsonify(
         {
@@ -454,7 +476,9 @@ def document_detail(doc_id: int):
         return _not_found("文档")
     if not can_view_document(current_user, doc):
         return _forbidden("无权查看该文档")
-    if doc.status != "published" and not (current_user.is_admin or doc.author_id == current_user.id):
+    if doc.status != "published" and not (
+        current_user.is_admin or doc.author_id == current_user.id
+    ):
         return _forbidden("该文档尚未发布")
 
     fav = Favorite.query.filter_by(user_id=current_user.id, document_id=doc.id).first()
@@ -479,8 +503,7 @@ def document_detail(doc_id: int):
         {
             "document": _doc_payload(doc, include_content=True, is_favorite=bool(fav)),
             "related": [
-                _doc_payload(item)
-                for item in related_documents(doc, current_user, limit=4)
+                _doc_payload(item) for item in related_documents(doc, current_user, limit=4)
             ],
             "can_edit": bool(current_user.is_admin or doc.author_id == current_user.id),
         }
@@ -545,7 +568,9 @@ def create_document():
         return _validation(error)
     db.session.add(doc)
     _finalize_document(doc, "create_document")
-    return jsonify({"document": _doc_payload(doc, include_content=True), "message": "文档已创建"}), 201
+    return jsonify(
+        {"document": _doc_payload(doc, include_content=True), "message": "文档已创建"}
+    ), 201
 
 
 @bp.put("/documents/<int:doc_id>")
@@ -671,7 +696,11 @@ def ask_question():
         return _validation("问题不能为空")
     result = ask(question, current_user, current_app.config)
     db.session.add(
-        AuditLog(user_id=current_user.id, action="ask_qa", detail=audit_detail("ask_qa", question=question))
+        AuditLog(
+            user_id=current_user.id,
+            action="ask_qa",
+            detail=audit_detail("ask_qa", question=question),
+        )
     )
     db.session.commit()
     return jsonify(
@@ -702,9 +731,7 @@ def _visible_graph_payload() -> dict:
     allowed_doc_ids = {doc.id for doc in searchable_documents(current_user)}
     nodes = {node["id"]: node for node in payload["nodes"]}
     visible_doc_nodes = {
-        node["id"]
-        for node in payload["nodes"]
-        if node.get("document_id") in allowed_doc_ids
+        node["id"] for node in payload["nodes"] if node.get("document_id") in allowed_doc_ids
     }
     visible_node_ids = set(visible_doc_nodes)
     links = []
@@ -715,7 +742,11 @@ def _visible_graph_payload() -> dict:
             visible_node_ids.add(link["target"])
     return {
         "nodes": [nodes[node_id] for node_id in visible_node_ids if node_id in nodes],
-        "links": [link for link in links if link["source"] in visible_node_ids and link["target"] in visible_node_ids],
+        "links": [
+            link
+            for link in links
+            if link["source"] in visible_node_ids and link["target"] in visible_node_ids
+        ],
         "categories": payload["categories"],
     }
 
@@ -734,11 +765,21 @@ def graph_manage():
     return jsonify(
         {
             "nodes": [
-                {"id": node.id, "name": node.name, "node_type": node.node_type, "description": node.description or ""}
+                {
+                    "id": node.id,
+                    "name": node.name,
+                    "node_type": node.node_type,
+                    "description": node.description or "",
+                }
                 for node in nodes
             ],
             "edges": [
-                {"id": edge.id, "source": edge.source.name, "target": edge.target.name, "relation": edge.relation}
+                {
+                    "id": edge.id,
+                    "source": edge.source.name,
+                    "target": edge.target.name,
+                    "relation": edge.relation,
+                }
                 for edge in edges
             ],
             "node_types": ["document", "department", "project", "keyword", "concept"],
@@ -792,8 +833,7 @@ def admin_users():
     return jsonify(
         {
             "items": [
-                {**_user_payload(user), "document_count": counts.get(user.id, 0)}
-                for user in users
+                {**_user_payload(user), "document_count": counts.get(user.id, 0)} for user in users
             ],
             "summary": {
                 "total": len(users),

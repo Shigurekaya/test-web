@@ -1,4 +1,5 @@
 """Build polished DOCX deliverables from the course Markdown sources."""
+
 from __future__ import annotations
 
 import re
@@ -41,7 +42,9 @@ NAVY = "101B33"
 LIGHT = "F3F6FA"
 
 
-def set_run_font(run, name: str, size: float | None = None, *, bold: bool | None = None, color: str | None = None):
+def set_run_font(
+    run, name: str, size: float | None = None, *, bold: bool | None = None, color: str | None = None
+):
     run.font.name = name
     run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), name)
     run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), name)
@@ -123,7 +126,9 @@ def add_hyperlink(paragraph, text: str, url: str):
 INLINE_RE = re.compile(r"(\*\*.+?\*\*|`.+?`|\[[^\]]+\]\([^)]+\))")
 
 
-def add_inline(paragraph, text: str, *, size: float = BODY_SIZE, color: str | None = None, bold: bool = False):
+def add_inline(
+    paragraph, text: str, *, size: float = BODY_SIZE, color: str | None = None, bold: bool = False
+):
     text = text.replace("<br>", "\n").replace("<br/>", "\n").replace("<br />", "\n")
     for part in INLINE_RE.split(text):
         if not part:
@@ -270,6 +275,7 @@ def add_toc(doc: Document):
     p = doc.add_paragraph()
     add_field(p, 'TOC \\o "1-3" \\h \\z \\u', "目录将在更新域后生成")
 
+
 def trim_front_matter(markdown: str) -> str:
     """Drop per-document covers and hand-written TOCs before merging.
 
@@ -279,9 +285,7 @@ def trim_front_matter(markdown: str) -> str:
     Fenced code is ignored to avoid treating shell comments as headings.
     """
     lines = markdown.splitlines()
-    pattern = re.compile(
-        r"^#{1,2}\s+(?:第?\s*\d+(?:[\.\s、]|$)|[一二三四五六七八九十]+[、\.])"
-    )
+    pattern = re.compile(r"^#{1,2}\s+(?:第?\s*\d+(?:[\.\s、]|$)|[一二三四五六七八九十]+[、\.])")
     in_code = False
     for index, line in enumerate(lines):
         stripped = line.strip()
@@ -427,7 +431,11 @@ def add_markdown(
         if not stripped:
             index += 1
             continue
-        if stripped.startswith("<!--") or stripped in {'<div align="center">', "</div>", "<div align='center'>"}:
+        if stripped.startswith("<!--") or stripped in {
+            '<div align="center">',
+            "</div>",
+            "<div align='center'>",
+        }:
             index += 1
             continue
         if stripped in {"---", "***"}:
@@ -483,6 +491,7 @@ def add_markdown(
         add_code_block(doc, code_lines)
     if page_break_first and len(doc.paragraphs) > first_paragraph_index:
         doc.paragraphs[first_paragraph_index].paragraph_format.page_break_before = True
+
 
 def build_document(title: str, version: str, markdown: str, md_path: Path) -> Document:
     doc = Document()

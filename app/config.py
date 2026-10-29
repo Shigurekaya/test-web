@@ -1,4 +1,5 @@
 """配置类：默认 / 测试 / 生产三套，敏感项一律走环境变量。"""
+
 import os
 from pathlib import Path
 
@@ -64,12 +65,18 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     """生产配置：不自动灌演示数据、错误不外泄细节。"""
 
+    SECRET_KEY = os.environ.get("SECRET_KEY")
     AUTO_SEED = False
     SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "1") not in (
         "0",
         "false",
         "False",
     )
+
+    @staticmethod
+    def init_app(app):
+        if not app.config.get("SECRET_KEY"):
+            raise RuntimeError("生产环境必须显式设置 SECRET_KEY")
 
 
 config_by_name = {

@@ -6,6 +6,7 @@ r"""准备 UML 渲染环境：中文字体 + PlantUML jar + jdk4py。
 
 脚本幂等：已存在的文件会跳过。
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -17,8 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 FONT_DIR = PROJECT_ROOT / ".tools" / "fonts"
 FONT_NAME = "NotoSansSC-VariableFont_wght.ttf"
 FONT_URL = (
-    "https://raw.githubusercontent.com/google/fonts/main/"
-    "ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf"
+    "https://raw.githubusercontent.com/google/fonts/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf"
 )
 JAR_DIR = PROJECT_ROOT / ".tools" / "plantuml"
 JAR_PATH = JAR_DIR / "plantuml.jar"
@@ -33,9 +33,12 @@ def download(url: str, dest: Path, label: str) -> bool:
     tmp = dest.with_suffix(dest.suffix + ".part")
     try:
         print(f"下载 {label} …")
-        with urllib.request.urlopen(
-            urllib.request.Request(url, headers={"User-Agent": UA}), timeout=180
-        ) as resp, open(tmp, "wb") as fh:
+        with (
+            urllib.request.urlopen(
+                urllib.request.Request(url, headers={"User-Agent": UA}), timeout=180
+            ) as resp,
+            open(tmp, "wb") as fh,
+        ):
             while True:
                 chunk = resp.read(1 << 16)
                 if not chunk:
@@ -67,9 +70,7 @@ def pip_install(packages) -> bool:
 
 
 def check_module(name: str) -> bool:
-    proc = subprocess.run(
-        [sys.executable, "-c", f"import {name}"], capture_output=True, text=True
-    )
+    proc = subprocess.run([sys.executable, "-c", f"import {name}"], capture_output=True, text=True)
     return proc.returncode == 0
 
 

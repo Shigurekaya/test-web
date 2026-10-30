@@ -62,27 +62,6 @@ async function submit() {
         </p>
       </div>
 
-      <div class="login-visual" aria-hidden="true">
-        <div class="visual-card visual-card--primary">
-          <div class="visual-card__head">
-            <span><AppIcon name="spark" :size="16" /> 智能问答</span>
-            <i>权限内检索</i>
-          </div>
-          <strong>员工年假有几天？</strong>
-          <p>根据《员工年休假管理办法》，工作满一年不满十年的员工，年休假为 5 天……</p>
-          <div class="visual-sources">
-            <span>来源 · 员工年休假管理办法</span>
-            <b>相关度 18.6</b>
-          </div>
-        </div>
-        <div class="visual-card visual-card--floating">
-          <span class="visual-pill"><AppIcon name="shield" :size="14" /> 机密隔离</span>
-          <p>信息部文档仅本部门可见</p>
-        </div>
-        <div class="visual-orb visual-orb--one" />
-        <div class="visual-orb visual-orb--two" />
-      </div>
-
       <div class="login-features">
         <span><AppIcon name="document" :size="17" /> 分级文档库</span>
         <span><AppIcon name="spark" :size="17" /> 可溯源问答</span>

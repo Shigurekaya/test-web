@@ -17,10 +17,10 @@
 ### Wrangler
 
 ```powershell
-npx wrangler pages deploy lkaya-pages --project-name lkaya-com
+npx wrangler pages deploy lkaya-pages --project-name test-web --branch main
 ```
 
-然后在 Cloudflare Pages 项目中绑定自定义域名 `lkaya.com`。
+Cloudflare Pages 项目名为 `test-web`，已绑定 `lkaya.com` 和 `www.lkaya.com`。`main` 分支推送后也会由 Git 集成自动构建，构建根目录为 `lkaya-pages`。
 
 ## 演示账号
 

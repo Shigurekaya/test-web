@@ -1,0 +1,12 @@
+/login / 200
+/dashboard / 200
+/documents / 200
+/qa / 200
+/graph / 200
+/about / 200
+/admin/users / 200
+/admin/audits / 200
+/documents/* / 200
+/qa/* / 200
+/graph/* / 200
+/admin/* / 200

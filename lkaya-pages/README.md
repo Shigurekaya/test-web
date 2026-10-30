@@ -21,6 +21,15 @@ npx wrangler pages deploy lkaya-pages --project-name test-web --branch main
 ```
 
 Cloudflare Pages 项目名为 `test-web`，已绑定 `lkaya.com` 和 `www.lkaya.com`。`main` 分支推送后也会由 Git 集成自动构建，构建根目录为 `lkaya-pages`。
+### 更新静态演示
+
+修改 `frontend/src` 后，在 `frontend` 目录执行：
+
+```powershell
+npm run pages:build
+```
+
+该命令会以根路径为基础构建 Vue 静态版本，并把资源和入口同步到 `lkaya-pages/`。
 
 ## 演示账号
 

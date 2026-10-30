@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import AppIcon from './AppIcon.vue'
 import { session } from '../stores/session'
@@ -8,6 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const mobileOpen = ref(false)
 const search = ref('')
+const searchInput = ref(null)
 
 const navGroups = computed(() => {
   const groups = [
@@ -43,7 +44,18 @@ const initials = computed(() => session.store.user?.display_name?.slice(0, 1) ||
 function submitSearch() {
   const q = search.value.trim()
   router.push({ name: 'documents', query: q ? { q } : {} })
-  if (q) search.value = ''
+}
+
+function clearSearch() {
+  search.value = ''
+  if (route.name === 'documents') router.push({ name: 'documents' })
+}
+
+function handleSearchShortcut(event) {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 'k') {
+    event.preventDefault()
+    searchInput.value?.focus()
+  }
 }
 
 async function signOut() {
@@ -51,9 +63,16 @@ async function signOut() {
   router.push({ name: 'login' })
 }
 
+watch(() => [route.name, route.query.q], ([name, q]) => {
+  search.value = name === 'documents' && typeof q === 'string' ? q : ''
+}, { immediate: true })
+
 watch(() => route.fullPath, () => {
   mobileOpen.value = false
 })
+
+onMounted(() => window.addEventListener('keydown', handleSearchShortcut))
+onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut))
 </script>
 
 <template>
@@ -111,8 +130,11 @@ watch(() => route.fullPath, () => {
         </div>
         <form class="global-search" @submit.prevent="submitSearch">
           <AppIcon name="search" :size="18" />
-          <input v-model="search" type="search" placeholder="搜索制度、手册或关键词…" aria-label="全局搜索" />
-          <kbd>Enter</kbd>
+          <input ref="searchInput" v-model="search" type="search" placeholder="搜索制度、手册或关键词…" aria-label="全局搜索" />
+          <button v-if="search" type="button" class="global-search__clear" aria-label="清空搜索" @click="clearSearch">
+            <AppIcon name="close" :size="14" />
+          </button>
+          <kbd>Ctrl K</kbd>
         </form>
         <RouterLink to="/documents/new" class="button button--primary topbar__action">
           <AppIcon name="plus" :size="17" />

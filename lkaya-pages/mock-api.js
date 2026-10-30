@@ -822,13 +822,14 @@
     if (document.getElementById('lkaya-demo-badge')) return
     const badge = document.createElement('div')
     badge.id = 'lkaya-demo-badge'
-    badge.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:2147483647;display:flex;align-items:center;gap:8px;padding:8px 11px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:#0f1b33;color:#fff;box-shadow:0 8px 28px rgba(15,27,51,.28);font:12px/1.4 system-ui,sans-serif;'
+    badge.title = 'lkaya.com 静态演示'
+    badge.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:2147483647;display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid rgba(148,163,184,.32);border-radius:999px;background:rgba(255,255,255,.92);color:#64748b;box-shadow:0 5px 18px rgba(15,27,51,.08);backdrop-filter:blur(10px);font:10px/1.4 system-ui,sans-serif;'
     const label = document.createElement('span')
-    label.textContent = 'lkaya.com · 静态演示'
+    label.textContent = '静态演示'
     const reset = document.createElement('button')
     reset.type = 'button'
     reset.textContent = '重置数据'
-    reset.style.cssText = 'border:0;background:transparent;color:#8fe1d3;padding:0;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px;'
+    reset.style.cssText = 'border:0;border-left:1px solid #e2e8f0;background:transparent;color:#147a67;padding:0 0 0 7px;font:inherit;font-weight:700;cursor:pointer;'
     reset.addEventListener('click', () => {
       if (!window.confirm('恢复全部演示数据并退出当前演示账号？')) return
       localStorage.removeItem(STORAGE_KEY)

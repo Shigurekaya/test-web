@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "pages:build": "vite build --base=/ --outDir ../.cache/lkaya-pages-build --emptyOutDir && node ../scripts/sync_pages_demo.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

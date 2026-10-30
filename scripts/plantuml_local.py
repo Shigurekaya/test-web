@@ -33,7 +33,7 @@ JAR_CANDIDATES = (
 CJK_FONT_FAMILY = "Noto Sans SC"
 
 # 所有图统一套用的皮肤参数：中文字体 + 略大的字号，便于投影/截图阅读
-SKIN_PARAMS = f'''
+SKIN_PARAMS = f"""
 skinparam defaultFontName "{CJK_FONT_FAMILY}"
 skinparam monospacedFontName "{CJK_FONT_FAMILY}"
 skinparam dpi 120
@@ -45,7 +45,7 @@ skinparam LegendFontSize 13
 skinparam ClassFontSize 13
 skinparam ClassAttributeFontSize 12
 skinparam NoteFontSize 13
-'''
+"""
 
 
 class RenderError(RuntimeError):

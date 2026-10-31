@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import PageHeader from '../components/PageHeader.vue'
 import { api } from '../api/client'
@@ -14,6 +14,9 @@ const loading = ref(Boolean(route.params.id))
 const saving = ref(false)
 const error = ref('')
 const showPreview = ref(false)
+const snapshotReady = ref(false)
+const savedSnapshot = ref('')
+const leavingAfterSave = ref(false)
 const form = reactive({
   title: '',
   content: '',
@@ -25,6 +28,12 @@ const form = reactive({
   version: '1.0',
   tags: ''
 })
+
+function formSnapshot() {
+  return JSON.stringify(form)
+}
+
+const dirty = computed(() => snapshotReady.value && savedSnapshot.value !== formSnapshot())
 
 async function load() {
   try {
@@ -53,6 +62,8 @@ async function load() {
     error.value = err.message
   } finally {
     loading.value = false
+    savedSnapshot.value = formSnapshot()
+    snapshotReady.value = true
   }
 }
 
@@ -73,6 +84,8 @@ async function submit() {
       ? await api.put(`/documents/${route.params.id}`, payload)
       : await api.post('/documents', payload)
     toast.success(result.message)
+    leavingAfterSave.value = true
+    savedSnapshot.value = formSnapshot()
     router.push(`/documents/${result.document.id}`)
   } catch (err) {
     error.value = err.message
@@ -82,7 +95,33 @@ async function submit() {
   }
 }
 
-onMounted(load)
+function handleBeforeUnload(event) {
+  if (!dirty.value || leavingAfterSave.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+function handleSaveShortcut(event) {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase() === 's') {
+    event.preventDefault()
+    if (!loading.value && !saving.value) submit()
+  }
+}
+
+onBeforeRouteLeave(() => {
+  if (!dirty.value || leavingAfterSave.value) return true
+  return window.confirm('当前修改尚未保存，确定离开吗？')
+})
+
+onMounted(() => {
+  load()
+  window.addEventListener('beforeunload', handleBeforeUnload)
+  window.addEventListener('keydown', handleSaveShortcut)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+  window.removeEventListener('keydown', handleSaveShortcut)
+})
 </script>
 
 <template>
@@ -93,10 +132,11 @@ onMounted(load)
       description="保存后系统会自动切分知识片段、提取关键词并同步知识关系图。"
     >
       <template #actions>
+        <span v-if="dirty" class="unsaved-indicator" role="status"><i /> 有未保存修改</span>
         <button class="button button--ghost" @click="showPreview = !showPreview">
           <AppIcon name="eye" :size="16" /> {{ showPreview ? '关闭预览' : '预览正文' }}
         </button>
-        <button class="button button--primary" :disabled="saving || loading" @click="submit">
+        <button class="button button--primary" :disabled="saving || loading" title="保存文档 (Ctrl+S)" @click="submit">
           <span v-if="saving" class="spinner spinner--light" />
           <AppIcon v-else name="check" :size="17" />
           {{ saving ? '保存中…' : '保存文档' }}
@@ -112,7 +152,7 @@ onMounted(load)
       <section class="panel editor-main">
         <label class="field">
           <span>文档标题 <b>*</b></span>
-          <input v-model="form.title" class="input-large" maxlength="200" placeholder="例如：员工年休假管理办法" />
+          <input v-model="form.title" class="input-large" maxlength="200" required placeholder="例如：员工年休假管理办法" />
         </label>
 
         <label class="field">
@@ -128,7 +168,7 @@ onMounted(load)
           </div>
           <span>{{ form.content.length }} 字</span>
         </div>
-        <textarea v-model="form.content" class="content-editor" placeholder="请输入制度、手册或业务知识正文…" />
+        <textarea v-model="form.content" class="content-editor" rows="16" required aria-label="文档正文" placeholder="请输入制度、手册或业务知识正文…" />
 
         <div v-if="showPreview" class="content-preview">
           <div class="section-heading section-heading--compact">

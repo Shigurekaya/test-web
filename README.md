@@ -24,6 +24,7 @@ V2.0 课程大作业。一个采用前后端分离架构的企业知识管理 We
 | 提交与运行说明 | [00-提交说明.md](./00-提交说明.md) |
 | 实现说明 | [实现说明](./docs/guides/实现说明.md) |
 | 正式文档索引 | [docs/course/README.md](./docs/course/README.md) |
+| 精简阅读文档 | [需求 / 设计 / 开发计划](./docs/short/) |
 | 交付验收记录 | [交付验收记录.md](./deliverables/交付验收记录.md) |
 
 ## 1. 系统能力

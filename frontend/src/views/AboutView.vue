@@ -100,7 +100,7 @@ onMounted(load)
           <p>项目包含需求规格、设计规格、开发计划、测试计划、测试用例、个人小结、UML 图与可运行源代码。</p>
         </div>
         <div class="project-footer-card__meta">
-          <span><AppIcon name="check" :size="15" /> 121+ 自动化测试</span>
+          <span><AppIcon name="check" :size="15" /> 136 条自动化测试</span>
           <span><AppIcon name="check" :size="15" /> 5 项个人考核材料</span>
           <span><AppIcon name="check" :size="15" /> 10 张 UML 图</span>
         </div>

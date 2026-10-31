@@ -53,32 +53,33 @@ onMounted(load)
         </div>
         <div class="input-shell toolbar__search">
           <AppIcon name="search" :size="17" />
-          <input v-model="query" placeholder="搜索姓名、账号或部门" />
+          <input v-model="query" aria-label="搜索用户" placeholder="搜索姓名、账号或部门" />
         </div>
       </div>
 
       <div v-if="loading" class="skeleton skeleton--table" />
       <div v-else class="table-wrap">
-        <table class="data-table">
+        <table v-if="filtered.length" class="data-table">
           <thead>
             <tr><th>用户</th><th>账号</th><th>角色</th><th>部门</th><th>文档数</th><th>创建时间</th></tr>
           </thead>
           <tbody>
             <tr v-for="user in filtered" :key="user.id">
-              <td>
+              <td data-label="用户">
                 <div class="person-cell">
                   <span class="avatar avatar--small">{{ user.display_name.slice(0, 1) }}</span>
                   <div><strong>{{ user.display_name }}</strong><small>#{{ user.id }}</small></div>
                 </div>
               </td>
-              <td><code>{{ user.username }}</code></td>
-              <td><span class="status-pill" :class="user.is_admin ? 'status-pill--secret' : 'status-pill--neutral'">{{ user.role_label }}</span></td>
-              <td>{{ user.department }}</td>
-              <td><strong>{{ user.document_count }}</strong></td>
-              <td class="muted">{{ user.created_at }}</td>
+              <td data-label="账号"><code>{{ user.username }}</code></td>
+              <td data-label="角色"><span class="status-pill" :class="user.is_admin ? 'status-pill--secret' : 'status-pill--neutral'">{{ user.role_label }}</span></td>
+              <td data-label="部门">{{ user.department }}</td>
+              <td data-label="文档数"><strong>{{ user.document_count }}</strong></td>
+              <td data-label="创建时间" class="muted">{{ user.created_at }}</td>
             </tr>
           </tbody>
         </table>
+        <div v-else class="empty-mini">没有匹配的账号。</div>
       </div>
     </section>
   </div>

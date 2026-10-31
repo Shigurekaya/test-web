@@ -343,14 +343,14 @@ onMounted(() => {
                 </template>
               </span>
             </div>
-            <div class="document-card__footer">
-              <span><AppIcon name="clock" :size="14" /> {{ doc.updated_at?.slice(0, 10) }}</span>
-              <span>v{{ doc.version }} · {{ doc.chunk_count }} 个知识片段</span>
-            </div>
           </RouterLink>
-          <button class="favorite-button" :class="{ 'favorite-button--active': doc.is_favorite }" :aria-label="doc.is_favorite ? '取消收藏' : '收藏'" @click="toggleFavorite(doc, $event)">
-            <AppIcon name="favorite" :size="18" />
-          </button>
+          <div class="document-card__footer">
+            <span><AppIcon name="clock" :size="14" /> {{ doc.updated_at?.slice(0, 10) }}</span>
+            <span class="document-card__version">v{{ doc.version }} · {{ doc.chunk_count }} 个知识片段</span>
+            <button class="favorite-button" :class="{ 'favorite-button--active': doc.is_favorite }" :aria-label="doc.is_favorite ? '取消收藏' : '收藏'" @click="toggleFavorite(doc, $event)">
+              <AppIcon name="favorite" :size="18" />
+            </button>
+          </div>
         </article>
       </div>
 

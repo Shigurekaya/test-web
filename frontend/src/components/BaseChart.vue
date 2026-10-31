@@ -21,6 +21,13 @@ function render() {
   chart.setOption(props.option, true)
 }
 
+function resetView() {
+  if (!chart) return
+  chart.clear()
+  render()
+  chart.resize()
+}
+
 onMounted(() => {
   chart = echarts.init(container.value)
   render()
@@ -35,6 +42,8 @@ onBeforeUnmount(() => {
   observer?.disconnect()
   chart?.dispose()
 })
+
+defineExpose({ resetView })
 </script>
 
 <template>

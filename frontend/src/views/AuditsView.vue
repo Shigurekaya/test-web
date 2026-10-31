@@ -38,9 +38,10 @@ function reset() {
   load()
 }
 
-function goPage(page) {
+async function goPage(page) {
   filters.page = page
-  load()
+  await load()
+  document.querySelector('.audits-view .panel--flush')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 onMounted(load)
@@ -58,12 +59,13 @@ onMounted(load)
       </template>
     </PageHeader>
 
-    <div v-if="data" class="audit-actions">
+    <div v-if="data" class="audit-actions" role="group" aria-label="按操作类型快速筛选">
       <button
         v-for="item in data.actions"
         :key="item.value"
         class="audit-action-chip"
         :class="{ 'audit-action-chip--active': filters.action === item.value }"
+        :aria-pressed="filters.action === item.value"
         @click="filters.action = filters.action === item.value ? '' : item.value; apply()"
       >
         <span>{{ item.label }}</span>
@@ -101,11 +103,11 @@ onMounted(load)
           <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>明细</th><th>编号</th></tr></thead>
           <tbody>
             <tr v-for="log in data?.items || []" :key="log.id">
-              <td class="muted nowrap">{{ log.created_at }}</td>
-              <td><span class="person-inline">{{ log.username }}</span></td>
-              <td><span class="status-pill" :class="log.action.includes('failed') ? 'status-pill--secret' : 'status-pill--neutral'">{{ log.action_label }}</span></td>
-              <td>{{ log.detail }}</td>
-              <td class="muted">#{{ log.id }}</td>
+              <td data-label="时间" class="muted nowrap">{{ log.created_at }}</td>
+              <td data-label="用户"><span class="person-inline">{{ log.username }}</span></td>
+              <td data-label="操作"><span class="status-pill" :class="log.action.includes('failed') ? 'status-pill--secret' : 'status-pill--neutral'">{{ log.action_label }}</span></td>
+              <td data-label="明细">{{ log.detail }}</td>
+              <td data-label="编号" class="muted">#{{ log.id }}</td>
             </tr>
           </tbody>
         </table>

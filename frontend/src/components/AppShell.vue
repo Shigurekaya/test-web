@@ -143,7 +143,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
           <span>智慧企业知识财富库</span>
           <h1>{{ pageTitle }}</h1>
         </div>
-        <form class="global-search" @submit.prevent="submitSearch">
+        <form class="global-search" role="search" @submit.prevent="submitSearch">
           <span class="global-search__icon"><AppIcon name="search" :size="17" /></span>
           <input
             ref="searchInput"
@@ -151,6 +151,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
             type="search"
             placeholder="检索制度、手册、关键词…"
             aria-label="全局搜索"
+            aria-keyshortcuts="Control+K Meta+K"
           />
           <button v-if="search" type="button" class="global-search__clear" aria-label="清空搜索" @click="clearSearch">
             <AppIcon name="close" :size="14" />
@@ -158,7 +159,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
           <kbd>Ctrl K</kbd>
         </form>
         <span class="topbar__status"><i /> 安全会话</span>
-        <RouterLink to="/documents/new" class="button button--primary topbar__action">
+        <RouterLink to="/documents/new" class="button button--primary topbar__action" aria-label="新建知识文档" title="新建知识文档">
           <AppIcon name="plus" :size="16" />
           <span>新建</span>
         </RouterLink>

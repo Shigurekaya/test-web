@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import PageHeader from '../components/PageHeader.vue'
@@ -15,10 +15,14 @@ const conversation = ref([])
 const error = ref('')
 const composer = ref(null)
 const selectedHistory = ref(null)
+const historyExpanded = ref(false)
 
 const suggestions = computed(() => pageData.value?.suggestions || [])
 const history = computed(() => pageData.value?.history || [])
 const canAsk = computed(() => question.value.trim().length > 0 && !asking.value)
+const visibleHistory = computed(() => (
+  historyExpanded.value ? history.value : history.value.slice(0, 5)
+))
 const composerPlaceholder = computed(() => (
   suggestions.value[0] ? `输入你的问题，例如：${suggestions.value[0]}` : '输入你的问题'
 ))
@@ -36,7 +40,10 @@ async function load() {
 }
 
 function focusComposer() {
-  nextTick(() => composer.value?.focus())
+  nextTick(() => {
+    if (window.matchMedia('(max-width: 760px)').matches) return
+    composer.value?.focus({ preventScroll: true })
+  })
 }
 
 async function ask(text = question.value) {
@@ -102,7 +109,15 @@ function newConversation() {
   focusComposer()
 }
 
-onMounted(load)
+function handleKeydown(event) {
+  if (event.key === 'Escape' && selectedHistory.value) selectedHistory.value = null
+}
+
+onMounted(() => {
+  load()
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', handleKeydown))
 </script>
 
 <template>
@@ -124,7 +139,7 @@ onMounted(load)
     </PageHeader>
 
     <div class="qa-layout">
-      <section class="panel qa-chat">
+      <section class="panel qa-chat" :class="{ 'qa-chat--conversation': conversation.length }">
         <div v-if="!conversation.length" class="qa-welcome">
           <span class="qa-welcome__badge"><i /> 权限感知 · 来源可追溯</span>
           <div class="qa-welcome__mark"><AppIcon name="spark" :size="30" /></div>
@@ -185,7 +200,7 @@ onMounted(load)
         </div>
 
         <form class="qa-composer" @submit.prevent="ask()">
-          <textarea ref="composer" v-model="question" rows="2" :placeholder="composerPlaceholder" @keydown.enter.exact.prevent="ask()" />
+          <textarea ref="composer" v-model="question" rows="2" aria-label="输入问答问题" :placeholder="composerPlaceholder" @keydown.enter.exact.prevent="ask()" />
           <div class="qa-composer__bottom">
             <span><AppIcon name="shield" :size="14" /> 仅检索你有权限查看的已发布文档</span>
             <button class="button button--primary" type="submit" :disabled="!canAsk">
@@ -204,12 +219,16 @@ onMounted(load)
             <span class="count-badge">{{ history.length }}</span>
           </div>
           <div v-if="history.length" class="history-list">
-            <button v-for="item in history" :key="item.id" class="history-item" @click="openHistory(item)">
+            <button v-for="item in visibleHistory" :key="item.id" class="history-item" @click="openHistory(item)">
               <span class="history-item__icon"><AppIcon name="clock" :size="15" /></span>
               <span>
                 <strong>{{ item.question }}</strong>
                 <small>{{ item.mode_label }} · {{ item.created_at }}</small>
               </span>
+            </button>
+            <button v-if="history.length > 5" class="history-toggle" @click="historyExpanded = !historyExpanded">
+              {{ historyExpanded ? '收起记录' : `展开全部 ${history.length} 条` }}
+              <AppIcon :name="historyExpanded ? 'chevron' : 'arrow'" :size="14" />
             </button>
           </div>
           <div v-else class="empty-mini">还没有问答记录。</div>
@@ -229,10 +248,10 @@ onMounted(load)
     </div>
 
     <div v-if="selectedHistory" class="modal-backdrop" @click.self="selectedHistory = null">
-      <section class="modal modal--wide">
+      <section class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="qa-history-title">
         <button class="icon-button modal__close" aria-label="关闭" @click="selectedHistory = null"><AppIcon name="close" :size="18" /></button>
         <p class="eyebrow">SAVED ANSWER</p>
-        <h2>{{ selectedHistory.question }}</h2>
+        <h2 id="qa-history-title">{{ selectedHistory.question }}</h2>
         <p class="muted">{{ selectedHistory.mode_label }} · {{ selectedHistory.created_at }}</p>
         <div class="answer-text modal__answer">{{ selectedHistory.answer }}</div>
         <div v-if="selectedHistory.sources?.length" class="source-block">

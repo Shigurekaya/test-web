@@ -26,6 +26,7 @@ htmlcov/
 .cache/
 
 # Vue frontend dependencies and local QA artifacts
+.wrangler/
 frontend/node_modules/
 frontend/.vite/
 .codex-tmp/

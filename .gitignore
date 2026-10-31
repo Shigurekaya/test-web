@@ -34,3 +34,4 @@ docs/render/
 
 # 服务包可能包含密钥，仅本地交付
 deliverables/*.rar
+deliverables/*.exe

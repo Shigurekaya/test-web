@@ -4,13 +4,15 @@
 ![Vue 3](https://img.shields.io/badge/Vue-3-42b883)
 ![Flask](https://img.shields.io/badge/Flask-3-000000?logo=flask&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-133%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/tests-136%20passed-brightgreen)
 
 V2.0 课程大作业。一个采用前后端分离架构的企业知识管理 Web 应用，覆盖需求分析、系统设计、编码实现、自动化测试、UML 建模、项目管理和最终文档交付。
 
+> 供后续开发者和 AI Agent 使用的完整文件地图：[项目文件说明.md](./项目文件说明.md)
+
 > 前端：Vue 3 + Vite + Vue Router + ECharts
 > 后端：Flask 3 REST API + SQLAlchemy + SQLite + jieba
-> 测试：pytest，当前 **133 条自动化测试全部通过**
+> 测试：pytest，当前 **136 条自动化测试全部通过**
 
 ## 交付物直达
 
@@ -152,7 +154,7 @@ npm run dev
 .\.venv\Scripts\python.exe -m ruff check app scripts tests run.py
 ```
 
-GitHub Actions 会同时执行 Ruff 检查与格式校验、133 条 pytest、前端生产依赖审计和 Vue 构建，避免只通过后端检查却遗漏前端编译或依赖安全问题。
+GitHub Actions 会同时执行 Ruff 检查与格式校验、136 条 pytest、前端生产依赖审计和 Vue 构建，避免只通过后端检查却遗漏前端编译或依赖安全问题。
 
 ## 6. REST API
 
@@ -188,6 +190,19 @@ UML 源文件位于 `docs/uml/`，已渲染 PNG/SVG 到 `docs/uml/rendered/`。�
 8. REST API 接口设计说明书
 
 最终 Word 合并版和单独文档输出到 `deliverables/`。
+
+### 7.1 重新生成页面截图
+
+先构建前端，再启动临时隔离数据库并生成 1440 × 950 桌面截图和 390 × 844 移动截图：
+
+```powershell
+cd frontend
+npm run build
+cd ..
+.\.venv\Scripts\python.exe scripts\capture_ui.py
+```
+
+脚本使用 `127.0.0.1:5099` 的临时 Flask 服务，不会修改演示数据库；会检查浏览器控制台错误和外部网络请求。前端字体使用 Windows 本地字体栈，不依赖 Google Fonts。
 
 ## 8. 配置项
 

@@ -1,6 +1,6 @@
 # 页面原型截图
 
-本目录是 V2.0 Vue 前端在真实 Flask API 环境下的运行截图，用于课程文档中的页面原型与验收证据。
+本目录是 V2.0 Vue 前端在临时隔离 Flask API 环境下的运行截图，用于课程文档中的页面原型与验收证据。
 
 | 文件 | 页面 | 说明 |
 |---|---|---|
@@ -17,4 +17,15 @@
 | `11-qa-answer.png` | 问答结果 | 回答、模式、来源文档和命中片段 |
 | `12-mobile-dashboard.png` | 移动端工作台 | 390 × 844 响应式布局 |
 
-截图由 Playwright 驱动本机 Chrome，在 `http://127.0.0.1:5000/` 的真实前后端联调环境中生成。
+桌面截图统一为 1440 × 950，移动截图为 390 × 844。截图由 `scripts/capture_ui.py` 调用 Playwright 生成；服务运行在 `127.0.0.1:5099`，使用临时数据库，不会修改 `instance/knowledge.db`。
+
+重新生成：
+
+```powershell
+cd frontend
+npm run build
+cd ..
+.\.venv\Scripts\python.exe scripts\capture_ui.py
+```
+
+截图任务会同时检查浏览器控制台错误和外部网络请求。界面字体使用 Windows 本地字体栈，不依赖 Google Fonts。

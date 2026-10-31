@@ -5,7 +5,7 @@
 |---|---|
 | 系统名称 | 智慧企业知识财富库系统（Enterprise Knowledge Wealth Base） |
 | 文档版本 | V2.0 |
-| 文档日期 | 2026-10-29 |
+| 文档日期 | 2026-10-31 |
 | 接口风格 | REST + JSON over HTTP |
 | 后端框架 | Flask 3 |
 | 数据访问 | SQLAlchemy + SQLite |
@@ -1083,7 +1083,7 @@ GET /api/documents/42
     "answer": "根据企业知识库检索……",
     "mode": "local",
     "mode_label": "本地检索",
-    "created_at": "2026-10-29 10:20:00",
+    "created_at": "2026-10-31 10:20:00",
     "sources": [
       {"document_id": 12, "title": "员工年休假管理办法", "score": 18.6}
     ]
@@ -1314,7 +1314,7 @@ GET /api/documents/42
       "action": "view_document",
       "action_label": "查看文档",
       "detail": "查看文档 #12 《员工年休假管理办法》",
-      "created_at": "2026-10-29 10:30:00"
+      "created_at": "2026-10-31 10:30:00"
     }
   ],
   "pagination": {"page": 1, "pages": 4, "total": 88, "per_page": 25},
@@ -1555,4 +1555,4 @@ Invoke-RestMethod -WebSession $session `
 
 ---
 
-*文档结束 · 2026-10-29 · V2.0*
+*文档结束 · 2026-10-31 · V2.0*

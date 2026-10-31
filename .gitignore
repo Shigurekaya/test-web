@@ -35,3 +35,7 @@ docs/render/
 # 服务包可能包含密钥，仅本地交付
 deliverables/*.rar
 deliverables/*.exe
+
+# 文档目录只保留 Markdown，二进制交付物统一放 deliverables
+docs/short/*.rar
+docs/short/*.exe

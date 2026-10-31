@@ -27,7 +27,7 @@ foreach ($item in $files) {
         }
         $doc.Repaginate()
         $doc.Save()
-        if ($item.Name -like "*完整报告*") {
+        if ($item.Name -notmatch '^\d{2}-') {
             $pdfPath = Join-Path $pdfDir ($item.BaseName + ".pdf")
             $doc.ExportAsFixedFormat($pdfPath, 17)
             Write-Host "Exported PDF: $pdfPath" -ForegroundColor Green

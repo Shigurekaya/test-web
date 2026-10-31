@@ -30,6 +30,48 @@
   const clone = (value) => JSON.parse(JSON.stringify(value))
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
   const normalizeQuestion = (value) => String(value || '').trim().replace(/\s+/g, ' ')
+  const questionKey = (value) => normalizeQuestion(value).replace(/[?？!！。.,，]+$/, '').toLocaleLowerCase()
+  const ADMIN_QUESTIONS = [
+    '差旅住宿标准是多少？',
+    '采购超过两万元要找谁审批？',
+    'API 密钥多久轮换一次？',
+    '合同用印怎么走？',
+    '线索 A 级要多久首触？',
+    '如何重置产品A密码？',
+    '发布窗口是哪段时间？',
+    '培训学分怎么算？',
+    '客服投诉怎么升级？',
+    '固定资产什么时候盘点？'
+  ]
+  const DEPARTMENT_QUESTIONS = {
+    人事部: ['员工年假有几天？', '加班怎么补偿？', '年假能跨年吗？', '培训学分怎么算？', '新员工入职首周要完成哪些事项？', '绩效考核多久复盘一次？'],
+    财务部: ['差旅住宿标准是多少？', '采购超过两万元要找谁审批？', '发票被驳回常见原因？', '预算超支怎么办？', '差旅报销多久内必须提交？', '合同用印怎么走？'],
+    信息部: ['VPN 远程办公要注意什么？', 'API 密钥多久轮换一次？', '数据备份多久演练一次？', '演示环境能导生产数据吗？', '发布窗口是哪段时间？', '个人信息能不能截图发群？'],
+    产品部: ['如何重置产品A密码？', '产品B v2.3 有什么新功能？', 'P0 需求怎么定义？', '客服投诉怎么升级？', '线索 A 级要多久首触？', '产品A 权限模型怎么划分？'],
+    运营部: ['线索 A 级要多久首触？', '续费预警什么时候发？', '客服投诉怎么升级？', '会议室最长约多久？', '值班升级矩阵怎么用？', '产品B 新功能如何对外说明？'],
+    市场部: ['品牌视觉使用有哪些禁区？', '官网与活动页内容多久审核一次？', '合同用印怎么走？', '对外发布素材需要哪些审批？', '产品B v2.3 有什么新功能？', '客户案例对外使用要注意什么？'],
+    法务部: ['合同用印怎么走？', '个人信息能不能截图发群？', '对外提供数据需要什么协议？', '电子章和实体章有什么区别？', '合同归档要在几天内完成？', '客户案例对外使用要注意什么？'],
+    技术部: ['API 密钥多久轮换一次？', '代码评审有哪些必查项？', '发布窗口是哪段时间？', '数据备份多久演练一次？', '演示环境能导生产数据吗？', '生产故障如何升级？'],
+    综合部: ['会议室最长约多久？', '办公用品领用标准是什么？', '固定资产什么时候盘点？', '采购超过两万元要找谁审批？', '合同用印怎么走？', '新员工入职首周要完成哪些事项？']
+  }
+
+  function suggestedQuestions(user) {
+    if (user?.is_admin) return clone(ADMIN_QUESTIONS)
+    return clone(DEPARTMENT_QUESTIONS[user?.department] || ['知识库怎么用？', '差旅住宿标准是多少？', '采购超过两万元要找谁审批？'])
+  }
+
+  function uniqueQa(items) {
+    const seen = new Set()
+    return items
+      .slice()
+      .sort((a, b) => dateValue(b.created_at) - dateValue(a.created_at))
+      .filter((item) => {
+        const key = questionKey(item.question)
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+  }
 
   function nowText(date = new Date()) {
     const pad = (n) => String(n).padStart(2, '0')
@@ -342,9 +384,9 @@
         categories: Object.entries(categories).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name, 'zh-CN')).slice(0, 8)
       },
       recent_documents: docs.slice().sort((a, b) => dateValue(b.updated_at) - dateValue(a.updated_at)).slice(0, 6).map((doc) => docPayload(doc, user)),
-      recent_qa: qas.slice().sort((a, b) => dateValue(b.created_at) - dateValue(a.created_at)).slice(0, 6).map((item) => qaPayload(item)),
+      recent_qa: uniqueQa(qas).slice(0, 6).map((item) => qaPayload(item)),
       recent_logs: user.is_admin ? state.audits.slice(0, 8).map((item) => clone(item)) : [],
-      quick_questions: clone(seedData.qaQuickQuestions)
+      quick_questions: suggestedQuestions(user).slice(0, 4)
     }
   }
 
@@ -686,7 +728,7 @@
     if (method === 'GET' && path === '/qa') {
       return json(200, {
         suggestions: clone(seedData.qaSuggestions),
-        quick_questions: clone(seedData.qaQuickQuestions),
+        quick_questions: suggestedQuestions(user).slice(0, 4),
         llm_enabled: false,
         history: userQa(user).slice().sort((a, b) => dateValue(b.created_at) - dateValue(a.created_at)).slice(0, 20).map((item) => qaPayload(item))
       })

@@ -3,7 +3,10 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 class Config:
@@ -55,6 +58,9 @@ class TestingConfig(Config):
 
     TESTING = True
     SECRET_KEY = "kb-wealth-testing-secret"
+    OPENAI_API_KEY = ""
+    OPENAI_BASE_URL = ""
+    OPENAI_MODEL = ""
     SQLALCHEMY_DATABASE_URI = "sqlite://"  # 内存库，进程退出即消失
     WTF_CSRF_ENABLED = False
     AUTO_SEED = True

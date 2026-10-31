@@ -28,11 +28,11 @@ const typeLabels = {
   concept: '概念'
 }
 const typeColors = {
-  document: '#3976d9',
-  department: '#1d9b83',
-  project: '#e9a23b',
-  keyword: '#7c5ce5',
-  concept: '#e76b67'
+  document: '#2f5fad',
+  department: '#0c7a66',
+  project: '#b7791f',
+  keyword: '#4d5d73',
+  concept: '#b33a32'
 }
 
 const categoryIndex = computed(() => {
@@ -168,9 +168,9 @@ onMounted(load)
 <template>
   <div class="view graph-view">
     <PageHeader
-      eyebrow="KNOWLEDGE GRAPH"
+      eyebrow="Graph"
       title="知识关系图"
-      description="拖拽、缩放并点击文档节点进入详情。关系来自文档所属部门、分类与关键词，内容按当前账号权限过滤。"
+      description="拖拽与缩放浏览结构；点击文档节点进入详情。关系由部门、分类与关键词生成，并按权限过滤。"
     >
       <template #actions>
         <button class="button button--ghost" :disabled="loading" @click="load"><AppIcon name="refresh" :size="16" /> 刷新图谱</button>

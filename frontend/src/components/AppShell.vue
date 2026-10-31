@@ -13,7 +13,7 @@ const searchInput = ref(null)
 const navGroups = computed(() => {
   const groups = [
     {
-      label: '知识工作台',
+      label: '工作区',
       items: [
         { to: '/dashboard', label: '工作台', icon: 'dashboard' },
         { to: '/documents', label: '知识文档', icon: 'document' },
@@ -24,7 +24,7 @@ const navGroups = computed(() => {
   ]
   if (session.store.user?.is_admin) {
     groups.push({
-      label: '系统管理',
+      label: '治理',
       items: [
         { to: '/admin/users', label: '用户管理', icon: 'users' },
         { to: '/admin/audits', label: '审计日志', icon: 'audit' }
@@ -32,14 +32,20 @@ const navGroups = computed(() => {
     })
   }
   groups.push({
-    label: '系统',
-    items: [{ to: '/about', label: '关于系统', icon: 'info' }]
+    label: '关于',
+    items: [{ to: '/about', label: '系统说明', icon: 'info' }]
   })
   return groups
 })
 
 const pageTitle = computed(() => route.meta.title || '智慧企业知识财富库')
 const initials = computed(() => session.store.user?.display_name?.slice(0, 1) || '知')
+const mobileNav = [
+  { to: '/dashboard', label: '工作台', icon: 'dashboard' },
+  { to: '/documents', label: '文档', icon: 'document' },
+  { to: '/qa', label: '问答', icon: 'spark' },
+  { to: '/graph', label: '图谱', icon: 'graph' }
+]
 
 function submitSearch() {
   const q = search.value.trim()
@@ -80,11 +86,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
     <div v-if="mobileOpen" class="shell__overlay" @click="mobileOpen = false" />
     <aside class="sidebar" :class="{ 'sidebar--open': mobileOpen }">
       <div class="brand">
-        <div class="brand__mark"><AppIcon name="book" :size="23" /></div>
-        <div>
+        <div class="brand__mark"><AppIcon name="book" :size="22" /></div>
+        <div class="brand__copy">
           <strong>知识财富库</strong>
-          <span>Knowledge Wealth</span>
+          <span>Archive Instrument</span>
         </div>
+        <span class="brand__edition">V2</span>
       </div>
 
       <nav class="sidebar__nav" aria-label="主导航">
@@ -97,12 +104,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
             class="nav-link"
             :class="{ 'nav-link--active': route.path.startsWith(item.to) }"
           >
-            <AppIcon :name="item.icon" :size="19" />
+            <AppIcon :name="item.icon" :size="18" />
             <span>{{ item.label }}</span>
-            <span class="nav-link__dot" />
           </RouterLink>
         </section>
       </nav>
+
+      <div class="sidebar__insight">
+        <div class="sidebar__insight-head">
+          <span><i /> 访问边界</span>
+          <b>已生效</b>
+        </div>
+        <div class="sidebar__insight-track"><i /></div>
+        <p>按部门与密级裁剪可见范围，检索与问答共用同一权限规则。</p>
+      </div>
 
       <div class="sidebar__footer">
         <div class="user-card">
@@ -129,16 +144,23 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
           <h1>{{ pageTitle }}</h1>
         </div>
         <form class="global-search" @submit.prevent="submitSearch">
-          <AppIcon name="search" :size="18" />
-          <input ref="searchInput" v-model="search" type="search" placeholder="搜索制度、手册或关键词…" aria-label="全局搜索" />
+          <span class="global-search__icon"><AppIcon name="search" :size="17" /></span>
+          <input
+            ref="searchInput"
+            v-model="search"
+            type="search"
+            placeholder="检索制度、手册、关键词…"
+            aria-label="全局搜索"
+          />
           <button v-if="search" type="button" class="global-search__clear" aria-label="清空搜索" @click="clearSearch">
             <AppIcon name="close" :size="14" />
           </button>
           <kbd>Ctrl K</kbd>
         </form>
+        <span class="topbar__status"><i /> 安全会话</span>
         <RouterLink to="/documents/new" class="button button--primary topbar__action">
-          <AppIcon name="plus" :size="17" />
-          <span>新建文档</span>
+          <AppIcon name="plus" :size="16" />
+          <span>新建</span>
         </RouterLink>
       </header>
 
@@ -150,5 +172,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleSearchShortcut
         </RouterView>
       </main>
     </div>
+
+    <nav class="mobile-dock" aria-label="移动端快捷导航">
+      <RouterLink
+        v-for="item in mobileNav"
+        :key="item.to"
+        :to="item.to"
+        class="mobile-dock__item"
+        :class="{ 'mobile-dock__item--active': route.path.startsWith(item.to) }"
+      >
+        <AppIcon :name="item.icon" :size="19" />
+        <span>{{ item.label }}</span>
+      </RouterLink>
+    </nav>
   </div>
 </template>

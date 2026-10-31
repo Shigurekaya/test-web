@@ -18,17 +18,11 @@ from app.models import (
     QAHistory,
     User,
 )
+from app.qa_content import quick_questions_for
 from app.services.rag import searchable_documents
 from app.utils import now_naive
 
 bp = Blueprint("main", __name__)
-
-QUICK_QUESTIONS = [
-    "员工年假有几天？",
-    "差旅住宿标准是多少？",
-    "加班怎么补偿？",
-    "采购超过两万元要找谁审批？",
-]
 
 
 @bp.route("/")
@@ -91,7 +85,7 @@ def dashboard():
         audit_count=AuditLog.query.count(),
         dept_stats=dept_stats,
         cat_stats=cat_stats,
-        quick_questions=QUICK_QUESTIONS,
+        quick_questions=quick_questions_for(current_user),
     )
 
 

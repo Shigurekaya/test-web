@@ -3,7 +3,6 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import EmptyState from '../components/EmptyState.vue'
-import PageHeader from '../components/PageHeader.vue'
 import { api } from '../api/client'
 import { toast } from '../stores/toast'
 
@@ -175,27 +174,34 @@ onMounted(() => {
 
 <template>
   <div class="view documents-view">
-    <PageHeader
-      eyebrow="KNOWLEDGE SEARCH"
-      title="搜索知识文档"
-      description="从企业制度、业务手册和项目经验中快速定位内容。搜索会覆盖标题、摘要、正文与标签，并自动过滤无权限文档。"
-    >
-      <template #actions>
+    <header class="library-intro">
+      <div class="library-intro__copy">
+        <p class="eyebrow">Library</p>
+        <div class="library-intro__title">
+          <h2>知识文档</h2>
+          <span class="library-intro__count">{{ data?.pagination.total ?? '—' }} 篇可访问</span>
+        </div>
+        <p>制度、手册与业务经验统一检索；结果在服务端按部门与密级裁剪后返回。</p>
+      </div>
+      <div class="library-intro__actions">
         <button class="button" :class="favoritesOnly ? 'button--primary' : 'button--ghost'" @click="toggleFavorites">
           <AppIcon name="favorite" :size="17" /> {{ favoritesOnly ? '正在看收藏' : '我的收藏' }}
         </button>
-      </template>
-    </PageHeader>
+        <RouterLink to="/documents/new" class="button button--primary">
+          <AppIcon name="plus" :size="17" /> 新建文档
+        </RouterLink>
+      </div>
+    </header>
 
     <form class="knowledge-search" @submit.prevent="applyFilters">
-      <section class="search-hero">
+      <section class="search-hero search-hero--library">
         <div class="search-hero__head">
           <div class="search-hero__intro">
             <span class="search-hero__mark"><AppIcon name="search" :size="22" /></span>
             <div>
-              <p class="eyebrow">SEARCH & DISCOVER</p>
-              <h3>在全库知识中找到答案</h3>
-              <p>输入制度名称、业务关键词或一个问题，系统会优先返回最相关的内容。</p>
+              <p class="eyebrow">Search</p>
+              <h3>检索企业知识</h3>
+              <p>输入制度名、业务词或问题描述，按相关度排序并高亮命中片段。</p>
             </div>
           </div>
           <span class="search-hero__privacy"><AppIcon name="shield" :size="15" /> 权限内检索</span>

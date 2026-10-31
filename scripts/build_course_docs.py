@@ -8,6 +8,7 @@ from pathlib import Path
 from docx import Document
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
+from docx.image.image import Image as DocxImage
 from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -18,7 +19,7 @@ SOURCE_DIR = ROOT / "docs" / "course"
 OUTPUT_DIR = ROOT / "deliverables"
 PROJECT_NAME = "智慧企业知识财富库系统"
 COURSE_NAME = "软件工程课程大作业"
-DOC_DATE = "2026-10-29"
+DOC_DATE = "2026-10-31"
 AUTHOR = "项目负责人（本人）"
 
 DOCUMENTS = [
@@ -322,9 +323,20 @@ def add_image(doc: Document, md_path: Path, alt: str, src: str):
     p.paragraph_format.first_line_indent = Cm(0)
     p.paragraph_format.space_before = Pt(6)
     p.paragraph_format.space_after = Pt(4)
+    p.paragraph_format.keep_with_next = True
     run = p.add_run()
+    max_width = Inches(6.15)
+    max_height = Inches(7.2)
     try:
-        run.add_picture(str(image_path), width=Inches(6.15))
+        source = DocxImage.from_file(str(image_path))
+        aspect = source.height / source.width
+        if max_width * aspect > max_height:
+            height = max_height
+            width = int(max_height / aspect)
+        else:
+            width = max_width
+            height = int(max_width * aspect)
+        run.add_picture(str(image_path), width=width, height=height)
     except Exception:
         run.add_picture(str(image_path), width=Inches(5.4))
     if alt:
@@ -536,7 +548,10 @@ def build_combined():
         path = SOURCE_DIR / filename
         markdown = path.read_text(encoding="utf-8")
         p = combined.add_paragraph(style="Heading 1")
-        p.paragraph_format.page_break_before = True
+        # Word 更新目录后会留下一个字段尾段落。若首个部分再次强制分页，
+        # 会产生一张只有页眉页脚的空白页；后续部分仍强制从新页开始。
+        if index:
+            p.paragraph_format.page_break_before = True
         add_inline(p, f"第{index + 1}部分  {title}", size=18, bold=True)
         add_markdown(combined, markdown, path, normalize_chapter_heading=True)
     props = combined.core_properties

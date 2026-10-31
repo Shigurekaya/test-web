@@ -2,7 +2,6 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
-import EmptyState from '../components/EmptyState.vue'
 import PageHeader from '../components/PageHeader.vue'
 import { api } from '../api/client'
 import { toast } from '../stores/toast'
@@ -20,6 +19,9 @@ const selectedHistory = ref(null)
 const suggestions = computed(() => pageData.value?.suggestions || [])
 const history = computed(() => pageData.value?.history || [])
 const canAsk = computed(() => question.value.trim().length > 0 && !asking.value)
+const composerPlaceholder = computed(() => (
+  suggestions.value[0] ? `输入你的问题，例如：${suggestions.value[0]}` : '输入你的问题'
+))
 
 async function load() {
   loading.value = true
@@ -57,13 +59,18 @@ async function ask(text = question.value) {
       time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     })
     question.value = ''
-    pageData.value.history.unshift({
+    const historyEntry = {
       id: result.history_id,
       question: value,
       answer: result.answer,
       mode_label: result.mode_label,
       created_at: new Date().toLocaleString('zh-CN')
-    })
+    }
+    const key = (text) => String(text || '').trim().replace(/\s+/g, ' ').replace(/[?？!！。.,，]+$/, '').toLocaleLowerCase()
+    const duplicateIndex = pageData.value.history.findIndex((item) => key(item.question) === key(value))
+    if (duplicateIndex >= 0) pageData.value.history.splice(duplicateIndex, 1)
+    pageData.value.history.unshift(historyEntry)
+    if (pageData.value.history.length > 20) pageData.value.history.pop()
     nextTick(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }))
   } catch (err) {
     error.value = err.message
@@ -88,27 +95,38 @@ function useSuggestion(text) {
   focusComposer()
 }
 
+function newConversation() {
+  conversation.value = []
+  question.value = ''
+  selectedHistory.value = null
+  focusComposer()
+}
+
 onMounted(load)
 </script>
 
 <template>
   <div class="view qa-view">
     <PageHeader
-      eyebrow="RETRIEVAL AUGMENTED ANSWER"
+      eyebrow="Retrieval"
       title="智能问答"
-      description="系统先按当前账号权限筛选文档，再检索最相关的知识片段。每条回答都会显示可核对的来源。"
+      description="先按账号权限裁剪文档，再检索相关知识片段；每条回答附带可核对来源。"
     >
       <template #actions>
         <span class="capability-pill" :class="{ 'capability-pill--live': pageData?.llm_enabled }">
           <AppIcon name="spark" :size="15" />
           {{ pageData?.llm_enabled ? '大模型增强已启用' : '本地检索摘要模式' }}
         </span>
+        <button class="button button--ghost" @click="newConversation">
+          <AppIcon name="plus" :size="16" /> 新对话
+        </button>
       </template>
     </PageHeader>
 
     <div class="qa-layout">
       <section class="panel qa-chat">
         <div v-if="!conversation.length" class="qa-welcome">
+          <span class="qa-welcome__badge"><i /> 权限感知 · 来源可追溯</span>
           <div class="qa-welcome__mark"><AppIcon name="spark" :size="30" /></div>
           <h2>今天想了解什么？</h2>
           <p>我可以基于你有权访问的企业知识文档回答问题，并给出原文来源。</p>
@@ -167,7 +185,7 @@ onMounted(load)
         </div>
 
         <form class="qa-composer" @submit.prevent="ask()">
-          <textarea ref="composer" v-model="question" rows="2" placeholder="输入你的问题，例如：员工年假有几天？" @keydown.enter.exact.prevent="ask()" />
+          <textarea ref="composer" v-model="question" rows="2" :placeholder="composerPlaceholder" @keydown.enter.exact.prevent="ask()" />
           <div class="qa-composer__bottom">
             <span><AppIcon name="shield" :size="14" /> 仅检索你有权限查看的已发布文档</span>
             <button class="button button--primary" type="submit" :disabled="!canAsk">

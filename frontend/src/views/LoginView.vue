@@ -43,39 +43,37 @@ async function submit() {
 <template>
   <main class="login-page">
     <section class="login-hero">
-      <div class="login-hero__glow login-hero__glow--one" />
-      <div class="login-hero__glow login-hero__glow--two" />
       <div class="login-brand">
-        <div class="brand__mark brand__mark--large"><AppIcon name="book" :size="27" /></div>
+        <div class="brand__mark brand__mark--large"><AppIcon name="book" :size="26" /></div>
         <div>
           <strong>智慧企业知识财富库</strong>
-          <span>Enterprise Knowledge Wealth Base</span>
+          <span>Enterprise Knowledge Archive</span>
         </div>
       </div>
 
       <div class="login-hero__copy">
-        <p class="eyebrow eyebrow--light">KNOWLEDGE · PERMISSION · ANSWERS</p>
-        <h1>让企业知识<br /><span>可查、可问、可治理</span></h1>
+        <p class="eyebrow eyebrow--light">Permission · Retrieval · Trace</p>
+        <h1>企业知识<br /><span>收纳、检索、可问</span></h1>
         <p>
-          面向企业制度与业务资料的统一知识平台。按部门与密级控制访问，
-          用检索增强问答定位答案，并以关系图呈现文档、部门与关键词之间的连接。
+          把制度、手册与经验沉淀成可治理的知识资产：部门密级控权，
+          检索问答带来源，关系图呈现文档之间的结构。
         </p>
       </div>
 
       <div class="login-features">
-        <span><AppIcon name="document" :size="17" /> 分级文档库</span>
-        <span><AppIcon name="spark" :size="17" /> 可溯源问答</span>
-        <span><AppIcon name="graph" :size="17" /> 知识关系图</span>
-        <span><AppIcon name="audit" :size="17" /> 全链路审计</span>
+        <span><AppIcon name="document" :size="16" /> 分级文档库</span>
+        <span><AppIcon name="spark" :size="16" /> 可溯源问答</span>
+        <span><AppIcon name="graph" :size="16" /> 知识关系图</span>
+        <span><AppIcon name="audit" :size="16" /> 全链路审计</span>
       </div>
     </section>
 
     <section class="login-panel">
       <div class="login-panel__inner">
         <div class="login-panel__head">
-          <p class="eyebrow">COURSE PROJECT · V{{ session.store.meta?.version || '2.0' }}</p>
-          <h2>登录知识工作台</h2>
-          <p>使用演示账号体验不同部门与角色的权限边界。</p>
+          <p class="eyebrow">Course Project · V{{ session.store.meta?.version || '2.0' }}</p>
+          <h2>进入知识工作台</h2>
+          <p>选择演示账号，体验不同部门与角色的权限边界。</p>
         </div>
 
         <form class="login-form" @submit.prevent="submit">
@@ -118,7 +116,7 @@ async function submit() {
           <div class="section-heading section-heading--compact">
             <div>
               <h3>演示账号</h3>
-              <p>点击即可填入，体验不同权限。</p>
+              <p>点击填入，切换权限视角。</p>
             </div>
           </div>
           <div class="demo-accounts__grid">
@@ -141,7 +139,7 @@ async function submit() {
 
         <p class="login-note">
           <AppIcon name="info" :size="15" />
-          所有演示数据均为课程作业虚构内容，不包含真实企业资料。
+          演示数据均为课程作业虚构内容，不包含真实企业资料。
         </p>
       </div>
     </section>

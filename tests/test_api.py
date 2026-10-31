@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.extensions import db
-from app.models import Category, Document, Favorite
+from app.models import Category, Document, Favorite, QAHistory
 
 
 def test_api_meta_is_public(client):
@@ -179,3 +179,41 @@ def test_api_history_detail_uses_json_sources(admin_client):
     assert item["question"] == "差旅住宿标准是多少？"
     assert isinstance(item["sources"], list)
     assert item["answer"]
+
+
+def test_qa_suggestions_are_role_aware(admin_client):
+    admin_payload = admin_client.get("/api/qa").get_json()
+    assert admin_payload["suggestions"][0] != "员工年假有几天？"
+    assert len(admin_payload["suggestions"]) >= 6
+
+    admin_client.post("/api/auth/logout")
+    admin_client.post("/api/auth/login", json={"username": "hr", "password": "hr123"})
+    hr_payload = admin_client.get("/api/qa").get_json()
+    assert hr_payload["suggestions"][0] == "员工年假有几天？"
+
+    admin_client.post("/api/auth/logout")
+    admin_client.post("/api/auth/login", json={"username": "finance", "password": "fin123"})
+    finance_payload = admin_client.get("/api/qa").get_json()
+    assert finance_payload["suggestions"][0] == "差旅住宿标准是多少？"
+
+
+def test_qa_history_is_deduplicated(admin_client, app):
+    first = admin_client.post("/api/qa/ask", json={"question": "重复历史去重测试"})
+    second = admin_client.post("/api/qa/ask", json={"question": "重复历史去重测试？"})
+    assert first.status_code == 200
+    assert second.status_code == 200
+
+    with app.app_context():
+        assert QAHistory.query.filter(QAHistory.question.like("重复历史去重测试%")).count() == 2
+
+    payload = admin_client.get("/api/qa").get_json()
+    matches = [
+        item for item in payload["history"] if item["question"].rstrip("？?") == "重复历史去重测试"
+    ]
+    assert len(matches) == 1
+
+
+def test_testing_config_disables_external_ai(app):
+    assert app.config["OPENAI_API_KEY"] == ""
+    assert app.config["OPENAI_BASE_URL"] == ""
+    assert app.config["OPENAI_MODEL"] == ""

@@ -1,9 +1,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
 import BaseChart from '../components/BaseChart.vue'
-import PageHeader from '../components/PageHeader.vue'
 import StatCard from '../components/StatCard.vue'
 import { api } from '../api/client'
 import { session } from '../stores/session'
@@ -24,28 +23,31 @@ const greeting = computed(() => {
   return '晚上好'
 })
 
+const chartInk = '#6b7380'
+const chartAxis = '#3a414c'
+
 const deptOption = computed(() => ({
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
   grid: { left: 8, right: 18, top: 12, bottom: 4, containLabel: true },
   xAxis: {
     type: 'value',
-    splitLine: { lineStyle: { color: '#e8edf4' } },
-    axisLabel: { color: '#7b879d' }
+    splitLine: { lineStyle: { color: '#e4e7ec' } },
+    axisLabel: { color: chartInk }
   },
   yAxis: {
     type: 'category',
     data: (data.value?.charts.departments || []).map((item) => item.name).reverse(),
     axisLine: { show: false },
     axisTick: { show: false },
-    axisLabel: { color: '#46536a', fontWeight: 600 }
+    axisLabel: { color: chartAxis, fontWeight: 600 }
   },
   series: [{
     type: 'bar',
     data: (data.value?.charts.departments || []).map((item) => item.value).reverse(),
-    barWidth: 12,
-    itemStyle: { color: '#1d9b83', borderRadius: [0, 8, 8, 0] },
+    barWidth: 11,
+    itemStyle: { color: '#0c7a66', borderRadius: [0, 4, 4, 0] },
     showBackground: true,
-    backgroundStyle: { color: '#f0f3f8', borderRadius: 8 }
+    backgroundStyle: { color: '#eef0f3', borderRadius: 4 }
   }]
 }))
 
@@ -61,15 +63,15 @@ const categoryOption = computed(() => ({
     icon: 'circle',
     itemWidth: 8,
     itemHeight: 8,
-    textStyle: { color: '#5e6b80', fontSize: 12 }
+    textStyle: { color: chartInk, fontSize: 12 }
   },
-  color: ['#1d9b83', '#3976d9', '#7c5ce5', '#e9a23b', '#e76b67', '#3ca8b8', '#8996a8', '#9c7a50'],
+  color: ['#0c7a66', '#2f5fad', '#4d5d73', '#b7791f', '#b33a32', '#3d8b84', '#6b7380', '#8b7355'],
   series: [{
     type: 'pie',
-    radius: ['48%', '72%'],
+    radius: ['46%', '70%'],
     center: ['33%', '50%'],
     avoidLabelOverlap: true,
-    itemStyle: { borderColor: '#fff', borderWidth: 3 },
+    itemStyle: { borderColor: '#fff', borderWidth: 2 },
     label: { show: false },
     data: data.value?.charts.categories || []
   }]
@@ -104,28 +106,38 @@ onMounted(load)
 <template>
   <div class="view dashboard-view">
     <section class="welcome-panel">
-      <div>
-        <p class="eyebrow">{{ formatToday() }}</p>
+      <div class="welcome-panel__copy">
+        <div class="welcome-panel__meta">
+          <span>{{ formatToday() }}</span>
+          <span class="welcome-panel__live"><i /> 知识库在线</span>
+        </div>
         <h2>{{ greeting }}，{{ session.store.user?.display_name }}</h2>
         <p>
-          当前以 <strong>{{ session.store.user?.department }} · {{ session.store.user?.role_label }}</strong>
-          身份访问，统计范围已按你的文档权限自动过滤。
+          当前身份
+          <strong>{{ session.store.user?.department }} · {{ session.store.user?.role_label }}</strong>
+          ，工作台统计与检索范围已按文档权限自动过滤。
         </p>
       </div>
-      <div class="welcome-panel__actions">
-        <button class="button button--ghost" :disabled="loading" @click="load">
-          <AppIcon name="refresh" :size="17" /> 刷新
-        </button>
-        <RouterLink to="/qa" class="button button--primary">
-          <AppIcon name="spark" :size="17" /> 发起问答
-        </RouterLink>
+      <div class="welcome-panel__aside">
+        <div class="welcome-panel__scope">
+          <AppIcon name="shield" :size="16" />
+          <span>权限范围<strong>{{ session.store.user?.department }}</strong></span>
+        </div>
+        <div class="welcome-panel__actions">
+          <button class="button button--ghost" :disabled="loading" @click="load">
+            <AppIcon name="refresh" :size="16" /> 刷新
+          </button>
+          <RouterLink to="/qa" class="button button--primary">
+            <AppIcon name="spark" :size="16" /> 发起问答
+          </RouterLink>
+        </div>
       </div>
     </section>
 
     <div v-if="error" class="inline-alert inline-alert--error"><AppIcon name="warning" />{{ error }}</div>
 
     <div v-if="loading" class="stats-grid">
-      <div v-for="index in 6" :key="index" class="skeleton skeleton--stat" />
+      <div v-for="index in 4" :key="index" class="skeleton skeleton--stat" />
     </div>
 
     <template v-else-if="data">
@@ -140,10 +152,10 @@ onMounted(load)
         <section class="panel">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">DOCUMENT DISTRIBUTION</p>
+              <p class="eyebrow">Distribution</p>
               <h3>部门知识分布</h3>
             </div>
-            <RouterLink to="/documents" class="text-link">查看全部 <AppIcon name="arrow" :size="15" /></RouterLink>
+            <RouterLink to="/documents" class="text-link">全部文档 <AppIcon name="arrow" :size="14" /></RouterLink>
           </div>
           <BaseChart v-if="data.charts.departments.length" :option="deptOption" height="292px" />
           <div v-else class="empty-mini">暂无可统计的部门文档</div>
@@ -152,7 +164,7 @@ onMounted(load)
         <section class="panel">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">CATEGORY MIX</p>
+              <p class="eyebrow">Composition</p>
               <h3>知识分类构成</h3>
             </div>
           </div>
@@ -165,11 +177,11 @@ onMounted(load)
         <section class="panel panel--flush">
           <div class="section-heading section-heading--padded">
             <div>
-              <p class="eyebrow">RECENT DOCUMENTS</p>
+              <p class="eyebrow">Recent</p>
               <h3>最近更新</h3>
             </div>
             <RouterLink to="/documents/new" class="button button--soft button--small">
-              <AppIcon name="plus" :size="15" /> 新建
+              <AppIcon name="plus" :size="14" /> 新建
             </RouterLink>
           </div>
           <div class="document-list">
@@ -179,13 +191,13 @@ onMounted(load)
               :to="`/documents/${doc.id}`"
               class="document-row"
             >
-              <span class="document-row__icon"><AppIcon name="document" :size="19" /></span>
+              <span class="document-row__icon"><AppIcon name="document" :size="18" /></span>
               <span class="document-row__main">
                 <strong>{{ doc.title }}</strong>
                 <small>{{ doc.category }} · {{ doc.department }} · 更新于 {{ doc.updated_at }}</small>
               </span>
               <span class="status-pill" :class="`status-pill--${doc.visibility}`">{{ doc.visibility_label }}</span>
-              <AppIcon name="chevron" :size="17" class="muted" />
+              <AppIcon name="chevron" :size="16" class="muted" />
             </RouterLink>
             <div v-if="!data.recent_documents.length" class="empty-mini">暂无可见文档</div>
           </div>
@@ -194,14 +206,19 @@ onMounted(load)
         <section class="panel">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">ASK THE KNOWLEDGE BASE</p>
+              <p class="eyebrow">Ask</p>
               <h3>快捷提问</h3>
             </div>
           </div>
           <div class="quick-question-list">
-            <button v-for="question in data.quick_questions" :key="question" class="quick-question" @click="ask(question)">
+            <button
+              v-for="question in data.quick_questions"
+              :key="question"
+              class="quick-question"
+              @click="ask(question)"
+            >
               <span>{{ question }}</span>
-              <AppIcon name="arrow" :size="16" />
+              <AppIcon name="arrow" :size="15" />
             </button>
           </div>
           <div class="qa-mini">
@@ -227,14 +244,14 @@ onMounted(load)
       <section v-if="data.recent_logs.length" class="panel">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">AUDIT TRAIL</p>
+            <p class="eyebrow">Audit</p>
             <h3>近期审计动态</h3>
           </div>
-          <RouterLink to="/admin/audits" class="text-link">审计中心 <AppIcon name="arrow" :size="15" /></RouterLink>
+          <RouterLink to="/admin/audits" class="text-link">审计中心 <AppIcon name="arrow" :size="14" /></RouterLink>
         </div>
         <div class="audit-strip">
           <div v-for="log in data.recent_logs" :key="log.id" class="audit-strip__item">
-            <span class="audit-strip__icon"><AppIcon name="audit" :size="16" /></span>
+            <span class="audit-strip__icon"><AppIcon name="audit" :size="15" /></span>
             <div>
               <strong>{{ log.action_label }}</strong>
               <p>{{ log.detail }}</p>

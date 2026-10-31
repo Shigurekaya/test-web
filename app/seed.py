@@ -816,6 +816,24 @@ DEMO_QA = [
     ),
 ]
 
+DEMO_QA_OWNERS = {
+    "员工年假有几天？": "hr",
+    "差旅住宿标准是多少？": "finance",
+    "加班怎么补偿？": "hr_fang",
+    "采购超过两万元要找谁审批？": "finance",
+    "如何重置产品A密码？": "product",
+    "知识库怎么用？": "admin_assist",
+    "VPN 远程办公要注意什么？": "it",
+    "合同用印怎么走？": "legal_zhao",
+    "线索 A 级要多久首触？": "ops_liu",
+    "续费预警什么时候发？": "ops_zhou",
+    "API 密钥多久轮换一次？": "tech_gao",
+    "发布窗口是哪段时间？": "tech_lin",
+    "演示环境能导生产数据吗？": "it_deng",
+    "培训学分怎么算？": "hr",
+    "发票被驳回常见原因？": "fin_he",
+}
+
 
 def _hash_passwords(specs) -> dict[str, str]:
     """并行为新用户生成密码哈希。
@@ -1022,7 +1040,9 @@ def _seed_activity(admin: User, app):
     base = datetime(2026, 9, 1, 9, 0, 0)
     if QAHistory.query.count() < 40:
         for i, (q, a, src_title) in enumerate(DEMO_QA):
-            asker = users[i % len(users)]
+            owner = DEMO_QA_OWNERS.get(q)
+            asker = User.query.filter_by(username=owner).first() if owner else None
+            asker = asker or users[i % len(users)]
             if QAHistory.query.filter_by(user_id=asker.id, question=q).first():
                 continue
             src_doc = title_map.get(src_title)
@@ -1050,23 +1070,46 @@ def _seed_activity(admin: User, app):
             )
         # 再补一批变体提问，避免历史全是同一句
         variants = [
-            ("年假能跨年吗？", "原则上不跨年累计，确因工作原因未休完的可延期至次年3月31日前使用。"),
-            ("会议室最长约多久？", "单次最长2小时；跨半天需部门负责人批准。"),
-            ("产品B v2.3 有什么新功能？", "新增知识库问答入口、机密可见性、按部门导出报表等。"),
+            (
+                "年假能跨年吗？",
+                "原则上不跨年累计，确因工作原因未休完的可延期至次年3月31日前使用。",
+                "hr",
+            ),
+            ("会议室最长约多久？", "单次最长2小时；跨半天需部门负责人批准。", "admin_assist"),
+            (
+                "产品B v2.3 有什么新功能？",
+                "新增知识库问答入口、机密可见性、按部门导出报表等。",
+                "product",
+            ),
             (
                 "客服投诉怎么升级？",
                 "先致歉复述；当场不能解决则建单并明确时限；资金纠纷须升级主管。",
+                "ops_zhou",
             ),
-            ("预算超支怎么办？", "须走追加申请，禁止先斩后奏；季度滚动预测偏差超10%需说明。"),
+            (
+                "预算超支怎么办？",
+                "须走追加申请，禁止先斩后奏；季度滚动预测偏差超10%需说明。",
+                "finance",
+            ),
             (
                 "个人信息能不能截图发群？",
                 "日志与截图中的手机号、证件号须打码；对外提供须协议与评估。",
+                "legal_zhao",
             ),
-            ("固定资产什么时候盘点？", "每年11月盘点；账实不符须当周完成差异说明。"),
-            ("P0 需求怎么定义？", "故障或合规类为 P0；影响营收为 P1；体验优化 P2；探索项 P3。"),
+            (
+                "固定资产什么时候盘点？",
+                "每年11月盘点；账实不符须当周完成差异说明。",
+                "admin_assist",
+            ),
+            (
+                "P0 需求怎么定义？",
+                "故障或合规类为 P0；影响营收为 P1；体验优化 P2；探索项 P3。",
+                "product",
+            ),
         ]
-        for i, (q, a) in enumerate(variants):
-            asker = users[(i + 3) % len(users)]
+        for i, (q, a, owner) in enumerate(variants):
+            asker = User.query.filter_by(username=owner).first()
+            asker = asker or users[(i + 3) % len(users)]
             if QAHistory.query.filter_by(user_id=asker.id, question=q).first():
                 continue
             created = base + timedelta(days=rng.randint(0, 26), hours=rng.randint(8, 18))

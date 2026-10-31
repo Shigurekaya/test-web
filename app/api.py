@@ -27,6 +27,7 @@ from app.models import (
     QAHistory,
     User,
 )
+from app.qa_content import quick_questions_for, suggestions_for
 from app.services.graph import (
     ensure_edge,
     get_or_create_node,
@@ -34,6 +35,7 @@ from app.services.graph import (
     remove_document_graph,
     sync_document_graph,
 )
+from app.services.qa_history import recent_unique_qa
 from app.services.rag import (
     ask,
     can_view_document,
@@ -59,28 +61,6 @@ from app.utils import (
 )
 
 bp = Blueprint("api", __name__, url_prefix="/api")
-
-QUICK_QUESTIONS = [
-    "员工年假有几天？",
-    "差旅住宿标准是多少？",
-    "加班怎么补偿？",
-    "采购超过两万元要找谁审批？",
-]
-
-SUGGESTED_QUESTIONS = [
-    "员工年假有几天？",
-    "差旅住宿标准是多少？",
-    "加班怎么补偿？",
-    "如何重置产品A密码？",
-    "采购超过两万元要找谁审批？",
-    "知识库怎么用？",
-    "线索 A 级要多久首触？",
-    "API 密钥多久轮换一次？",
-    "合同用印怎么走？",
-    "续费预警什么时候发？",
-    "发布窗口是哪段时间？",
-    "培训学分怎么算？",
-]
 
 
 def api_login_required(view):
@@ -161,7 +141,7 @@ def _doc_payload(
         "created_at": format_dt(doc.created_at),
         "updated_at": format_dt(doc.updated_at),
         "char_count": len(doc.content or ""),
-        "chunk_count": doc.chunk_count,
+        "chunk_count": len(doc.chunks or []),
         "is_favorite": is_favorite,
     }
     if include_content:
@@ -325,11 +305,13 @@ def dashboard():
         .all()
     }
     week_ago = now_naive() - timedelta(days=7)
+    qa_total = QAHistory.query.filter_by(user_id=current_user.id).count()
     qa_week = (
         QAHistory.query.filter_by(user_id=current_user.id)
         .filter(QAHistory.created_at >= week_ago)
         .count()
     )
+
     dept_counter: dict[str, int] = {}
     cat_counter: dict[str, int] = {}
     for doc in docs:
@@ -338,13 +320,7 @@ def dashboard():
         cat_counter[cat_name] = cat_counter.get(cat_name, 0) + 1
 
     recent_docs = [_doc_payload(doc, is_favorite=doc.id in favorite_ids) for doc in docs[:6]]
-    recent_qa = [
-        _qa_payload(item)
-        for item in QAHistory.query.filter_by(user_id=current_user.id)
-        .order_by(QAHistory.created_at.desc())
-        .limit(6)
-        .all()
-    ]
+    recent_qa = [_qa_payload(item) for item in recent_unique_qa(current_user.id, limit=6)]
     recent_logs = []
     if current_user.is_admin:
         recent_logs = [
@@ -357,7 +333,7 @@ def dashboard():
             "stats": {
                 "visible_documents": len(docs),
                 "favorites": len(favorite_ids),
-                "qa_total": QAHistory.query.filter_by(user_id=current_user.id).count(),
+                "qa_total": qa_total,
                 "qa_week": qa_week,
                 "nodes": GraphNode.query.count(),
                 "edges": GraphEdge.query.count(),
@@ -379,7 +355,7 @@ def dashboard():
             "recent_documents": recent_docs,
             "recent_qa": recent_qa,
             "recent_logs": recent_logs,
-            "quick_questions": QUICK_QUESTIONS,
+            "quick_questions": quick_questions_for(current_user),
         }
     )
 
@@ -672,16 +648,11 @@ def create_category():
 @bp.get("/qa")
 @api_login_required
 def qa_page():
-    history = (
-        QAHistory.query.filter_by(user_id=current_user.id)
-        .order_by(QAHistory.created_at.desc())
-        .limit(20)
-        .all()
-    )
+    history = recent_unique_qa(current_user.id, limit=20)
     return jsonify(
         {
-            "suggestions": SUGGESTED_QUESTIONS,
-            "quick_questions": QUICK_QUESTIONS,
+            "suggestions": suggestions_for(current_user),
+            "quick_questions": quick_questions_for(current_user),
             "llm_enabled": bool(current_app.config.get("OPENAI_API_KEY")),
             "history": [_qa_payload(item) for item in history],
         }

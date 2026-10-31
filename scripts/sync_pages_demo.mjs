@@ -25,12 +25,15 @@ for (const entry of await readdir(targetAssets, { withFileTypes: true })) {
   }
 }
 
+const moduleTag = buildIndex.match(/<script type="module"[^>]*><\/script>/)?.[0]
+if (!moduleTag) throw new Error('Could not find built module entry')
+
+const pagesHtml = buildIndex.replace(
+  moduleTag,
+  `<script src="/mock-api.js"></script>\n    ${moduleTag}`
+)
 for (const name of ['index.html', '404.html']) {
-  const target = path.join(targetDir, name)
-  let html = await readFile(target, 'utf8')
-  html = html.replace(/src="\/assets\/index-[^"]+\.js"/, `src="${js}"`)
-  html = html.replace(/href="\/assets\/index-[^"]+\.css"/, `href="${css}"`)
-  await writeFile(target, html, 'utf8')
+  await writeFile(path.join(targetDir, name), pagesHtml, 'utf8')
 }
 
 console.log(`Synced Cloudflare Pages demo: ${js}, ${css}`)

@@ -168,9 +168,40 @@ def can_view_document(user, doc: Document) -> bool:
     return True  # public
 
 
+def visible_documents_query(user):
+    """SQL-level visibility filter for published documents.
+
+    Keeps the same rules as ``can_view_document`` but avoids loading every row
+    into Python before permission checks.
+    """
+    from sqlalchemy import and_, false, or_
+    from sqlalchemy.orm import joinedload, selectinload
+
+    query = Document.query.options(
+        joinedload(Document.category),
+        joinedload(Document.author),
+        selectinload(Document.chunks),
+    ).filter_by(status="published")
+    if user is None:
+        return query.filter(false())
+    if user.is_admin:
+        return query.order_by(Document.updated_at.desc())
+    return query.filter(
+        or_(
+            Document.visibility.in_(("public", "internal")),
+            and_(
+                Document.visibility == "secret",
+                or_(
+                    Document.department == user.department,
+                    Document.author_id == user.id,
+                ),
+            ),
+        )
+    ).order_by(Document.updated_at.desc())
+
+
 def searchable_documents(user) -> list[Document]:
-    docs = Document.query.filter_by(status="published").order_by(Document.updated_at.desc()).all()
-    return [doc for doc in docs if can_view_document(user, doc)]
+    return visible_documents_query(user).all()
 
 
 def rank_documents(docs: list[Document], q: str) -> list[Document]:

@@ -5,25 +5,12 @@ from flask_login import current_user, login_required
 
 from app.extensions import db
 from app.models import AuditLog, QAHistory
+from app.qa_content import suggestions_for
+from app.services.qa_history import recent_unique_qa
 from app.services.rag import ask, group_hits_by_document
 from app.utils import audit_detail
 
 bp = Blueprint("qa", __name__, url_prefix="/qa")
-
-SUGGESTED_QUESTIONS = [
-    "员工年假有几天？",
-    "差旅住宿标准是多少？",
-    "加班怎么补偿？",
-    "如何重置产品A密码？",
-    "采购超过两万元要找谁审批？",
-    "知识库怎么用？",
-    "线索 A 级要多久首触？",
-    "API 密钥多久轮换一次？",
-    "合同用印怎么走？",
-    "续费预警什么时候发？",
-    "发布窗口是哪段时间？",
-    "培训学分怎么算？",
-]
 
 
 @bp.route("/", methods=["GET", "POST"])
@@ -47,12 +34,7 @@ def ask_page():
     else:
         question = request.args.get("q", "").strip()
 
-    history = (
-        QAHistory.query.filter_by(user_id=current_user.id)
-        .order_by(QAHistory.created_at.desc())
-        .limit(20)
-        .all()
-    )
+    history = recent_unique_qa(current_user.id, limit=20)
     return render_template(
         "qa/ask.html",
         result=result,
@@ -60,7 +42,7 @@ def ask_page():
         question=question,
         history=history,
         llm_enabled=bool(current_app.config.get("OPENAI_API_KEY")),
-        suggestions=SUGGESTED_QUESTIONS,
+        suggestions=suggestions_for(current_user),
     )
 
 

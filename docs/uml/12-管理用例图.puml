@@ -1,0 +1,37 @@
+@startuml 12-管理用例图
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
+}
+
+actor "管理员" as Admin
+actor "系统运维人员" as Ops
+actor "匿名访问者" as Guest
+
+rectangle "智慧企业知识财富库系统 V2.0\n管理与支持用例" {
+  package "管理与治理" {
+    usecase "UC-CAT-01\n新增知识分类" as Category
+    usecase "UC-KG-02\n新增图谱节点与关系" as MaintainGraph
+    usecase "UC-ADM-01\n查看用户目录" as Users
+    usecase "UC-AUD-01\n查询审计日志" as Audits
+  }
+
+  package "系统支持" {
+    usecase "UC-OPS-01\n检查健康状态" as Health
+  }
+}
+
+Admin --> Category
+Admin --> MaintainGraph
+Admin --> Users
+Admin --> Audits
+Ops --> Health
+Guest --> Health
+
+@enduml

@@ -1,12 +1,15 @@
 # 智慧企业知识财富库系统
 
 [![CI](https://github.com/Shigurekaya/test-web/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Shigurekaya/test-web/actions/workflows/ci.yml)
+[![Live Demo](https://img.shields.io/badge/demo-lkaya.com-0ea5e9?logo=cloudflare&logoColor=white)](https://lkaya.com/)
 ![Vue 3](https://img.shields.io/badge/Vue-3-42b883)
 ![Flask](https://img.shields.io/badge/Flask-3-000000?logo=flask&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-136%20passed-brightgreen)
 
 V2.0 课程大作业。一个采用前后端分离架构的企业知识管理 Web 应用，覆盖需求分析、系统设计、编码实现、自动化测试、UML 建模、项目管理和最终文档交付。
+
+**在线演示：[lkaya.com](https://lkaya.com/)**（Cloudflare Pages 静态演示，使用浏览器内 Mock 数据）
 
 > 供后续开发者和 AI Agent 使用的完整文件地图：[项目文件说明.md](./项目文件说明.md)
 
@@ -25,6 +28,7 @@ V2.0 课程大作业。一个采用前后端分离架构的企业知识管理 We
 | 实现说明 | [实现说明](./docs/guides/实现说明.md) |
 | 正式文档索引 | [docs/course/README.md](./docs/course/README.md) |
 | 精简阅读文档 | [需求 / 设计 / 开发计划](./docs/short/) |
+| 完整用例模型 | [参与者 / 用例图 / 用例描述 / 追踪](./docs/用例描述/00-用例模型总览.md) |
 | 交付验收记录 | [交付验收记录.md](./deliverables/交付验收记录.md) |
 
 ## 1. 系统能力
@@ -100,6 +104,7 @@ npm run dev
 
 ```text
 大作业/
+├── .github/                      CI 与 Dependabot 配置
 ├── app/
 │   ├── api.py                    REST API
 │   ├── spa.py                    Vue 生产构建托管
@@ -109,13 +114,12 @@ npm run dev
 │   ├── seed.py                   演示数据
 │   └── templates/                兼容页面
 ├── frontend/
-│   ├── src/views/                Vue 页面
-│   ├── src/components/           通用组件
-│   ├── src/api/                  前端 API 客户端
-│   ├── src/stores/               会话与提示状态
+│   ├── src/                      Vue 源码
 │   └── dist/                     已构建生产文件
+├── lkaya-pages/                  Cloudflare Pages 静态演示
 ├── tests/                        pytest 自动化测试
 ├── docs/
+│   ├── short/                    精简需求、设计与开发计划
 │   ├── course/                   课程作业正式文档
 │   ├── guides/                   提交说明与实现说明
 │   ├── screenshots/              页面截图
@@ -126,6 +130,7 @@ npm run dev
 ├── run.py
 ├── start.ps1 / stop.ps1
 ├── 00-提交说明.md
+├── 项目文件说明.md
 └── README.md
 ```
 
@@ -179,7 +184,7 @@ GitHub Actions 会同时执行 Ruff 检查与格式校验、136 条 pytest、前
 
 ## 7. UML 与课程文档
 
-UML 源文件位于 `docs/uml/`，已渲染 PNG/SVG 到 `docs/uml/rendered/`。课程正式文档位于 `docs/course/`，包括：
+UML 源文件位于 `docs/uml/`，已渲染 PNG/SVG 到 `docs/uml/rendered/`。完整用例模型位于 `docs/用例描述/00-用例模型总览.md`，包含 17 个用户目标用例以及 `include`、`extend` 和参与者泛化关系。课程正式文档位于 `docs/course/`，包括：
 
 1. 项目开发计划
 2. 软件需求规格说明书

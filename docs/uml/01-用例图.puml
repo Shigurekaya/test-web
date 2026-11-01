@@ -1,43 +1,65 @@
 @startuml 01-用例图
 left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
 skinparam packageStyle rectangle
-actor "管理员" as Admin
-actor "普通员工" as Emp
-
-rectangle "智慧企业知识财富库系统" {
-  usecase "登录系统" as UC1
-  usecase "退出系统" as UC2
-  usecase "管理知识文档" as UC3
-  usecase "检索知识文档" as UC4
-  usecase "智能问答" as UC5
-  usecase "浏览知识图谱" as UC6
-  usecase "收藏文档" as UC7
-  usecase "维护分类" as UC8
-  usecase "维护图谱关系" as UC9
-  usecase "查看审计日志" as UC10
-  usecase "查看用户列表" as UC11
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
 }
 
-Emp --> UC1
-Emp --> UC2
-Emp --> UC3
-Emp --> UC4
-Emp --> UC5
-Emp --> UC6
-Emp --> UC7
+actor "匿名访问者" as Guest
+actor "普通员工" as Employee
+actor "管理员" as Admin
+actor "大模型服务\n（可选外部系统）" as LLM
+Admin --|> Employee
 
-Admin --> UC1
-Admin --> UC2
-Admin --> UC3
-Admin --> UC4
-Admin --> UC5
-Admin --> UC6
-Admin --> UC7
-Admin --> UC8
-Admin --> UC9
-Admin --> UC10
-Admin --> UC11
+rectangle "智慧企业知识财富库系统 V2.0\n核心业务用例" {
+  package "认证与工作台" {
+    usecase "UC-AUTH-01\n登录系统" as Login
+    usecase "UC-AUTH-02\n退出系统" as Logout
+    usecase "UC-DASH-01\n查看工作台" as Dashboard
+  }
 
-UC3 ..> UC4 : <<include>>
-UC5 ..> UC4 : <<include>>
+  package "知识文档" {
+    usecase "UC-DOC-01\n发布或更新知识文档" as MaintainDoc
+    usecase "UC-DOC-02\n删除知识文档" as DeleteDoc
+    usecase "UC-DOC-03\n检索知识文档" as SearchDoc
+    usecase "UC-DOC-04\n查看文档详情" as ViewDoc
+    usecase "UC-FAV-01\n收藏或取消收藏" as Favorite
+  }
+
+  package "智能问答" {
+    usecase "UC-QA-01\n提交智能问答" as AskQA
+    usecase "UC-QA-02\n查看问答历史" as QAHistory
+  }
+
+  package "知识图谱与系统" {
+    usecase "UC-KG-01\n浏览知识图谱" as ViewGraph
+    usecase "UC-SYS-01\n查看系统信息" as About
+  }
+}
+
+Guest --> Login
+Employee --> Login
+Employee --> Logout
+Employee --> Dashboard
+Employee --> MaintainDoc
+Employee --> DeleteDoc
+Employee --> SearchDoc
+Employee --> ViewDoc
+Employee --> Favorite
+Employee --> AskQA
+Employee --> QAHistory
+Employee --> ViewGraph
+Employee --> About
+LLM --> AskQA : 可选支持
+
+note right of Admin
+  管理员继承普通员工的全部用例。
+  管理治理用例见 12-管理用例图。
+end note
+
 @enduml

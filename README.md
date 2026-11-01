@@ -28,6 +28,7 @@ V2.0 课程大作业。一个采用前后端分离架构的企业知识管理 We
 | 实现说明 | [实现说明](./docs/guides/实现说明.md) |
 | 正式文档索引 | [docs/course/README.md](./docs/course/README.md) |
 | 精简阅读文档 | [需求 / 设计 / 开发计划](./docs/short/) |
+| 完整用例模型 | [参与者 / 用例图 / 用例描述 / 追踪](./docs/用例描述/00-用例模型总览.md) |
 | 交付验收记录 | [交付验收记录.md](./deliverables/交付验收记录.md) |
 
 ## 1. 系统能力
@@ -183,7 +184,7 @@ GitHub Actions 会同时执行 Ruff 检查与格式校验、136 条 pytest、前
 
 ## 7. UML 与课程文档
 
-UML 源文件位于 `docs/uml/`，已渲染 PNG/SVG 到 `docs/uml/rendered/`。课程正式文档位于 `docs/course/`，包括：
+UML 源文件位于 `docs/uml/`，已渲染 PNG/SVG 到 `docs/uml/rendered/`。完整用例模型位于 `docs/用例描述/00-用例模型总览.md`，包含 17 个用户目标用例以及 `include`、`extend` 和参与者泛化关系。课程正式文档位于 `docs/course/`，包括：
 
 1. 项目开发计划
 2. 软件需求规格说明书

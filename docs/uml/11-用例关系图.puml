@@ -1,0 +1,53 @@
+@startuml 11-用例关系图
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F8FAFC
+  BorderColor #334155
+  FontColor #0F172A
+}
+
+actor "普通员工" as Employee
+actor "管理员" as Admin
+Admin --|> Employee
+
+rectangle "用户目标与共享行为" {
+  usecase "UC-AUTH-01\n登录系统" as Login
+  usecase "UC-DOC-01\n发布或更新知识文档" as MaintainDoc
+  usecase "UC-DOC-03\n检索知识文档" as SearchDoc
+  usecase "UC-DOC-04\n查看文档详情" as ViewDoc
+  usecase "UC-FAV-01\n收藏或取消收藏" as Favorite
+  usecase "UC-KG-01\n浏览知识图谱" as ViewGraph
+  usecase "UC-QA-01\n提交智能问答" as AskQA
+
+  usecase "UC-QA-EXT-01\n使用大模型增强回答" as LLMExtension
+  usecase "UC-SEC-01\n校验文档访问权限" as PermissionCheck
+  usecase "UC-IDX-01\n同步检索索引与图谱" as SyncIndex
+}
+
+Employee --> Login
+Employee --> MaintainDoc
+Employee --> SearchDoc
+Employee --> ViewDoc
+Employee --> Favorite
+Employee --> ViewGraph
+Employee --> AskQA
+
+AskQA ..> SearchDoc : <<include>>
+AskQA ..> PermissionCheck : <<include>>
+SearchDoc ..> PermissionCheck : <<include>>
+ViewDoc ..> PermissionCheck : <<include>>
+Favorite ..> PermissionCheck : <<include>>
+ViewGraph ..> PermissionCheck : <<include>>
+MaintainDoc ..> SyncIndex : <<include>>
+LLMExtension .> AskQA : <<extend>>
+
+note right of LLMExtension
+  扩展点：已配置 OpenAI 兼容接口，
+  且外部模型调用成功。
+  失败时回到本地摘要基本流。
+end note
+
+@enduml
